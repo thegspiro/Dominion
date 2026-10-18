@@ -130,6 +130,26 @@ Victory points are entered by hand, so the result is only as accurate as the sco
 - Events, Landmarks, Projects, Ways, Traits, Prophecies, Allies and other non-supply cards cannot be chosen as kingdom piles yet.
 - Card effects are not applied. The tracker counts piles and points; you move coins and actions yourself.
 
+## Screen sizes
+
+Every page adapts to the screen: phones and tablets in portrait or landscape, and desktop browsers. Sign-in and account pages stay a single narrow column. The card browser, Kingdom setup, game list and game tracker use the extra width: card and pile lists flow into two to four columns, and on a landscape phone the page tightens its spacing so the counters and scores stay in view. Buttons stay at least 44 px tall on every size. The screenshots below are the game tracker.
+
+![Game tracker on a phone in portrait (390 by 844)](images/20-game-phone-portrait.png)
+
+![Game tracker on a phone in landscape (844 by 390)](images/20-game-phone-landscape.png)
+
+![Game tracker on a tablet in portrait (820 by 1180)](images/20-game-tablet-portrait.png)
+
+![Game tracker on a tablet in landscape (1180 by 820)](images/20-game-tablet-landscape.png)
+
+![Game tracker on a desktop (1440 by 900)](images/20-game-desktop.png)
+
+Kingdom setup on a tablet in portrait, and the card browser on a desktop:
+
+![Kingdom setup on a tablet in portrait](images/21-kingdom-tablet-portrait.png)
+
+![Card browser on a desktop](images/22-cards-desktop.png)
+
 ## Good to know
 
 - Sessions last 30 days and renew while you keep using the app. **Log out** on the administration page ends the session on that device.

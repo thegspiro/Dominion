@@ -1,6 +1,7 @@
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
 import { createPool } from './db.js';
+import { loadRules } from './games/rules.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -9,6 +10,7 @@ async function main(): Promise<void> {
     pool,
     simUrl: config.simUrl,
     trustProxy: config.trustProxy,
+    rules: await loadRules(config.cardsDataDir),
     auth: { pool, setupToken: config.setupToken, cookieSecure: config.cookieSecure },
   });
   if (config.setupToken === undefined) {

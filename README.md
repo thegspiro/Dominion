@@ -20,6 +20,8 @@ Open http://localhost:8080. MySQL is not published; the `migrate` service applie
 
 ## Accounts
 
+See the [user guide](docs/user-guide.md) for a screenshot walkthrough.
+
 Access is invite-only. Set `SETUP_TOKEN` in `.env` (16+ characters), start the stack, and open `/setup.html` to create the administrator; the setup page stops working as soon as any user exists. The admin page (`/admin.html`) creates single-use invite links (valid 72 hours) for other people.
 
 - Passwords are hashed with argon2id; sessions are stored server-side and last 30 days (sliding). The browser holds only a random token in an httpOnly, SameSite=Lax cookie.

@@ -156,6 +156,12 @@ describe('classifyCard', () => {
     expect(classifyCard(card('Spoils', { types: ['Treasure'], costCoins: 0 }), rules)).toBe('not_supply');
     expect(classifyCard(card('Bat', { costCoins: null }), rules)).toBe('not_supply');
   });
+
+  it('never treats the basic Potion, Platinum and Colony piles as kingdom cards', () => {
+    expect(classifyCard(card('Potion', { types: ['Treasure'], costCoins: 4 }), rules)).toBe('not_supply');
+    expect(classifyCard(card('Platinum', { types: ['Treasure'], costCoins: 9 }), rules)).toBe('not_supply');
+    expect(classifyCard(card('Colony', { types: ['Victory'], costCoins: 11 }), rules)).toBe('not_supply');
+  });
 });
 
 describe('applyAction', () => {

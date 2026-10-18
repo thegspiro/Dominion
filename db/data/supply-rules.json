@@ -19,7 +19,7 @@
     "Event", "Landmark", "Project", "Way", "Trait", "Prophecy", "Ally", "Boon", "Hex", "State",
     "Artifact", "Loot", "Prize", "Reward", "Heirloom", "Shelter", "Zombie", "Spirit", "Mat"
   ],
-  "notSupplyCards": ["Spoils", "Madman", "Mercenary", "Horse", "Wish", "Bat", "Vampire"],
+  "notSupplyCards": ["Spoils", "Madman", "Mercenary", "Horse", "Wish", "Bat", "Vampire", "Potion", "Platinum", "Colony"],
   "manualPileTypes": [
     "Knight", "Castle", "Ruins", "Traveller", "Augur", "Clash", "Fort", "Odyssey", "Townsfolk", "Wizard"
   ],

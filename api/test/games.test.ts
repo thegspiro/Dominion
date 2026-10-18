@@ -191,6 +191,32 @@ describe.skipIf(!dbHost)('game tracker against MySQL', () => {
       expect(res.json()).toEqual({ error: 'invalid_game', reason: 'not_a_supply_card' });
     });
 
+    it('refuses the basic Potion, Platinum and Colony cards as kingdom cards', async () => {
+      const [rows] = await pool.query<mysql.RowDataPacket[]>(
+        "SELECT id, name_en FROM cards WHERE name_en IN ('Potion', 'Platinum', 'Colony')",
+      );
+      expect(rows.map((r) => r['name_en']).sort()).toEqual(['Colony', 'Platinum', 'Potion']);
+      for (const row of rows) {
+        const res = await call(owner, 'POST', '/games', {
+          players: [{ name: 'A' }, { name: 'B' }],
+          cardIds: [String(row['id']), ...kingdomIds.slice(1)],
+        });
+        expect(res.statusCode, String(row['name_en'])).toBe(422);
+        expect(res.json().reason).toBe('not_a_supply_card');
+      }
+    });
+
+    it('never offers them in a random kingdom', async () => {
+      const [rows] = await pool.query<mysql.RowDataPacket[]>(
+        "SELECT id FROM cards WHERE name_en IN ('Potion', 'Platinum', 'Colony')",
+      );
+      const banned = new Set(rows.map((r) => String(r['id'])));
+      for (let i = 0; i < 25; i += 1) {
+        const ids = ((await call(owner, 'GET', '/kingdoms/random')).json().items as { id: string }[]).map((c) => c.id);
+        expect(ids.some((id) => banned.has(id))).toBe(false);
+      }
+    });
+
     it('validates the request', async () => {
       const players = [{ name: 'A' }, { name: 'B' }];
       const status = async (body: unknown) => (await call(owner, 'POST', '/games', body)).statusCode;

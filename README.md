@@ -37,7 +37,7 @@ Cards and editions come from a snapshot of [dennisgermany/dominion](https://gith
 
     npm --prefix api run import-cards
 
-The snapshot is kept exactly as published. Fixes go in `db/data/corrections.json`, each with the types it replaces, the types it sets, the reason, and the sources that agree. A correction fails the import if the card or its current types no longer match, so a stale fix cannot be applied silently. Two are recorded so far: Ambassador (adds Attack) and Island (adds Action), both confirmed against two other public card lists.
+The snapshot is kept exactly as published. Fixes go in `db/data/corrections.json`, each with the types it replaces, the types it sets, the reason, and the sources that agree. A correction fails the import if the card or its current types no longer match, so a stale fix cannot be applied silently. Four are recorded so far, each confirmed against other public card lists and against the printed card image: Ambassador (adds Attack), Island (adds Action), Death Cart (adds Looter) and Miser (removes Reserve).
 
 Cost notation is parsed into coins, potions, debt and a "variable cost" flag (`3`, `2P`, `D8`, `8*`); an unknown notation stops the import. Cards that disappear from a later snapshot are kept in the database and counted in the import log, because later features may refer to them.
 

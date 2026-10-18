@@ -167,6 +167,17 @@ describe.skipIf(!dbHost)('card import and API against MySQL', () => {
       expect(victory.items[0].types).toEqual(['Action', 'Victory']);
     });
 
+    it('serves the corrected types for Death Cart and Miser', async () => {
+      const types = async (name: string) =>
+        ((await get(`/cards?q=${encodeURIComponent(name)}&limit=5`)).json().items as { name: { en: string }; types: string[] }[]).find(
+          (c) => c.name.en === name,
+        )?.types;
+      expect(await types('Death Cart')).toEqual(['Action', 'Looter']);
+      expect(await types('Miser')).toEqual(['Action']);
+      const looters = (await get('/cards?type=Looter&limit=50')).json().items as { name: { en: string } }[];
+      expect(looters.map((c) => c.name.en).sort()).toEqual(['Cultist', 'Death Cart', 'Marauder']);
+    });
+
     it('filters by edition and matches the edition card counts', async () => {
       const editions = (await get('/editions')).json().editions;
       expect(editions).toHaveLength(24);

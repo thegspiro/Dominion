@@ -1,5 +1,6 @@
 import { api, byId, currentUser } from './api.js';
 import { button, el } from './dom.js';
+import { takeDraft } from './draft.js';
 
 interface CardView {
   id: string;
@@ -141,6 +142,12 @@ void (async () => {
     return;
   }
   renderPlayers();
+  if (new URLSearchParams(window.location.search).get('from') === 'kingdom') {
+    const draft = takeDraft();
+    if (draft) {
+      kingdom = draft.map((card) => ({ ...card }));
+    }
+  }
   renderKingdom();
   const editions = await api<{ editions: { id: string; name: { en: string } }[] }>('/editions');
   for (const edition of editions.body?.editions ?? []) {

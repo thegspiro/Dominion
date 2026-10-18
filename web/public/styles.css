@@ -204,3 +204,81 @@ button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chips button,
+.controls button[aria-pressed] {
+  margin-top: 0;
+  min-height: 2.75rem;
+  border: 1px solid #2d4a3e;
+  background: #fffdf8;
+  color: #2d4a3e;
+}
+
+.chips button[aria-pressed="true"],
+.controls button[aria-pressed="true"] {
+  background: #2d4a3e;
+  color: #fff;
+}
+
+.cards li.locked {
+  border-color: #2d4a3e;
+  background: #eef3ee;
+}
+
+details {
+  margin: 1rem 0;
+}
+
+summary {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid #d9d3c0;
+  border-radius: 0.5rem;
+  background: #fffdf8;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+summary::before {
+  content: "+";
+  width: 1rem;
+  text-align: center;
+}
+
+details[open] > summary::before {
+  content: "-";
+}
+
+details[open] > summary {
+  margin-bottom: 0.75rem;
+}
+
+fieldset {
+  margin: 1rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+legend {
+  font-weight: 600;
+}
+
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.controls button {
+  padding: 0.4rem 0.65rem;
+  font-size: 0.85rem;
+}

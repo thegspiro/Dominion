@@ -65,3 +65,56 @@ button:disabled {
 .status:empty {
   display: none;
 }
+
+select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  font: inherit;
+  border: 1px solid #b9b3a3;
+  border-radius: 0.25rem;
+  background: #fff;
+}
+
+label.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400;
+}
+
+label.check input {
+  display: inline-block;
+  width: auto;
+  margin: 0;
+}
+
+.cards {
+  list-style: none;
+  margin: 1rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cards li {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d9d3c0;
+  border-radius: 0.5rem;
+  background: #fffdf8;
+}
+
+.cards .top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cards .detail {
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+  color: #5e5a4e;
+}

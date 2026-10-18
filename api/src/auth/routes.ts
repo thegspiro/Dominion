@@ -58,7 +58,9 @@ const newAccountProps = {
   password: { type: 'string', minLength: MIN_PASSWORD_LENGTH, maxLength: MAX_PASSWORD_LENGTH },
 } as const;
 
-export function registerAuth(app: FastifyInstance, options: AuthOptions): void {
+export type Authenticate = (request: FastifyRequest, reply: FastifyReply) => Promise<FastifyReply | undefined>;
+
+export function registerAuth(app: FastifyInstance, options: AuthOptions): { authenticate: Authenticate } {
   const { pool } = options;
   const ipLimiter = new RateLimiter(options.limits?.perIp ?? 30, WINDOW_MS);
   const userLimiter = new RateLimiter(options.limits?.perUser ?? 8, WINDOW_MS);
@@ -251,4 +253,6 @@ export function registerAuth(app: FastifyInstance, options: AuthOptions): void {
       return reply.code(201).send({ user: result.user, csrfToken });
     },
   );
+
+  return { authenticate };
 }

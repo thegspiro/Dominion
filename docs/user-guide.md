@@ -58,6 +58,18 @@ A wrong username or a wrong password gives the same message, so the page does no
 
 ![Login error](images/10-login-error.png)
 
+## Browsing cards
+
+Choose **Browse cards** on the home page (`/cards.html`). The list covers 852 cards from 24 editions, from the 2008 base game to Rising Sun. Each entry shows the cost, the card's types and the editions it appears in. Cards that cannot be part of a kingdom, such as Events and Landmarks, say so.
+
+![Card browser](images/11-cards-browser.png)
+
+Search by English or German name, filter by edition or type, or tick **Kingdom cards only**. Results load 50 at a time; choose **Show more** for the rest.
+
+![Card browser filtered on a phone](images/12-cards-filtered-phone.png)
+
+The browser shows names, costs, types and editions only. Card text and rulings are not included yet.
+
 ## Good to know
 
 - Sessions last 30 days and renew while you keep using the app. **Log out** on the administration page ends the session on that device.

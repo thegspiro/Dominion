@@ -10,6 +10,7 @@ A web app for the card game Dominion: kingdom setup, a shared-table game tracker
 | `sim/` | Python (FastAPI) simulation service |
 | `web/` | Static HTML + vanilla TypeScript frontend, served by nginx |
 | `db/migrations/` | MySQL migrations (see its README) |
+| `db/data/` | Card data snapshot, corrections and licence notice |
 
 ## Run with Docker
 
@@ -30,6 +31,18 @@ Access is invite-only. Set `SETUP_TOKEN` in `.env` (16+ characters), start the s
 - The API sits behind the web container's proxy, so `TRUST_PROXY=true` is set in compose to read the client IP from `X-Forwarded-For`. The API port is also published; do not expose it beyond your trusted network, because a direct caller could spoof that header and sidestep the per-IP limit.
 - Rollback: `npm --prefix api run migrate -- down` drops the `users`, `sessions` and `invites` tables, which deletes all accounts.
 
+## Card data
+
+Cards and editions come from a snapshot of [dennisgermany/dominion](https://github.com/dennisgermany/dominion) (MIT licence; see `db/data/NOTICE.md`): 852 cards across 24 editions, with names, costs, types and edition membership but no card text. `docker compose up` imports it automatically through the `import-cards` service, and you can re-run it at any time without duplicating anything:
+
+    npm --prefix api run import-cards
+
+The snapshot is kept exactly as published. Fixes go in `db/data/corrections.json`, each with the types it replaces, the types it sets, the reason, and the sources that agree. A correction fails the import if the card or its current types no longer match, so a stale fix cannot be applied silently. Two are recorded so far: Ambassador (adds Attack) and Island (adds Action), both confirmed against two other public card lists.
+
+Cost notation is parsed into coins, potions, debt and a "variable cost" flag (`3`, `2P`, `D8`, `8*`); an unknown notation stops the import. Cards that disappear from a later snapshot are kept in the database and counted in the import log, because later features may refer to them.
+
+The API (sign-in required) offers `GET /cards` (filters `q`, `edition`, `type`, `minCost`, `maxCost`, `potion`, `kingdom`, `limit`, `offset`; unknown parameters are rejected), `GET /cards/:id`, `GET /editions` and `GET /card-types`. Rollback of the card tables: `npm --prefix api run migrate -- down` (removes the latest migration only).
+
 ## Tests
 
     npm --prefix api ci && npm --prefix api test
@@ -37,4 +50,4 @@ Access is invite-only. Set `SETUP_TOKEN` in `.env` (16+ characters), start the s
     python -m venv .venv && .venv/bin/pip install -r sim/requirements-dev.txt && (cd sim && ../.venv/bin/python -m pytest)
     npm --prefix web ci && npm --prefix web run typecheck
 
-The MySQL-backed tests drop and recreate `schema_migrations`, `users`, `sessions`, `invites`, `widget` and `gadget`; point them at a throwaway database.
+The MySQL-backed tests drop and recreate `schema_migrations`, the account and card tables, `widget` and `gadget`; point them at a throwaway database.

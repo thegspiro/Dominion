@@ -1,0 +1,26 @@
+{
+  "corrections": [
+    {
+      "name": "Ambassador",
+      "expectedMatches": 1,
+      "wasTypes": ["Action"],
+      "types": ["Action", "Attack"],
+      "reason": "Ambassador is an Attack card; the snapshot lists only Action.",
+      "evidence": [
+        "https://github.com/cypressf/dominion cards.csv lists Action and Attack",
+        "https://github.com/mressler/RanDominion dominionCards.js lists isAction and isAttack"
+      ]
+    },
+    {
+      "name": "Island",
+      "expectedMatches": 1,
+      "wasTypes": ["Victory"],
+      "types": ["Action", "Victory"],
+      "reason": "Island is an Action - Victory card; the snapshot lists only Victory.",
+      "evidence": [
+        "https://github.com/cypressf/dominion cards.csv lists Action and Victory",
+        "https://github.com/mressler/RanDominion dominionCards.js lists isAction and isVictory"
+      ]
+    }
+  ]
+}

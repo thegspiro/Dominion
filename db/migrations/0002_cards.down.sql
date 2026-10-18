@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS edition_cards;
+DROP TABLE IF EXISTS card_types;
+DROP TABLE IF EXISTS cards;
+DROP TABLE IF EXISTS editions;

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - Cards</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <p><a href="/">Home</a></p>
+    <h1>Cards</h1>
+    <form id="filters">
+      <label for="q">Search by name</label>
+      <input id="q" name="q" type="search" maxlength="64" autocomplete="off">
+      <label for="edition">Edition</label>
+      <select id="edition" name="edition"><option value="">All editions</option></select>
+      <label for="type">Card type</label>
+      <select id="type" name="type"><option value="">All types</option></select>
+      <label class="check"><input id="kingdom" name="kingdom" type="checkbox"> Kingdom cards only</label>
+      <button type="submit">Search</button>
+    </form>
+    <p id="summary" role="status"></p>
+    <ul id="results" class="cards"></ul>
+    <button id="more" type="button" hidden>Show more</button>
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+  </main>
+  <script type="module" src="js/cards.js"></script>
+</body>
+</html>

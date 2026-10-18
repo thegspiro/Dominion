@@ -34,6 +34,17 @@ services:
         condition: service_healthy
     restart: "no"
 
+  import-cards:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    command: ["node", "dist/cli/import-cards.js"]
+    environment: *api_env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
   api:
     build:
       context: .
@@ -43,7 +54,7 @@ services:
     ports:
       - "${API_PORT:-3000}:3000"
     depends_on:
-      migrate:
+      import-cards:
         condition: service_completed_successfully
       sim:
         condition: service_healthy

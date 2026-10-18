@@ -10,6 +10,7 @@ export interface Config {
   };
   simUrl: string;
   migrationsDir: string;
+  cardsDataDir: string;
   setupToken: string | undefined;
   cookieSecure: boolean;
   trustProxy: boolean;
@@ -75,6 +76,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     },
     simUrl: env['SIM_URL'] || 'http://sim:8000',
     migrationsDir: env['MIGRATIONS_DIR'] || '/app/migrations',
+    cardsDataDir: env['CARDS_DATA_DIR'] || '/app/data',
     setupToken: setupToken(env),
     cookieSecure: bool(env, 'COOKIE_SECURE', true),
     trustProxy: bool(env, 'TRUST_PROXY', false),

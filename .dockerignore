@@ -5,3 +5,4 @@ web/public/js
 **/.pytest_cache
 .git
 .env
+cards

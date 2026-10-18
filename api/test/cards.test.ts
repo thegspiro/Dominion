@@ -141,6 +141,9 @@ describe.skipIf(!dbHost)('card import and API against MySQL', () => {
       expect(village.types).toEqual(['Action']);
       expect(village.editions.length).toBeGreaterThan(0);
       expect(village.kingdom).toBe(true);
+      expect(village.imageSlug).toBe('village');
+      const kings = (await get("/cards?q=King's%20Court")).json().items[0];
+      expect(kings.imageSlug).toBe('kings-court');
     });
 
     it('searches English and German names, case-insensitively', async () => {

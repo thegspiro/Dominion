@@ -74,6 +74,8 @@ services:
     restart: unless-stopped
     ports:
       - "${WEB_PORT:-8080}:8080"
+    volumes:
+      - ${CARDS_DIR:-./cards}:/usr/share/nginx/cards:ro
     depends_on:
       - api
 

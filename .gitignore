@@ -6,3 +6,9 @@ __pycache__/
 .pytest_cache/
 *.pyc
 .venv/
+
+# Card pictures are copyrighted and are hosted locally, not committed.
+cards/*.webp
+cards/*.jpg
+cards/*.jpeg
+cards/*.png

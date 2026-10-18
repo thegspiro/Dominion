@@ -236,6 +236,15 @@ describe.skipIf(!dbHost)('auth routes against MySQL', () => {
       expect(rows[0]?.['extended']).toBe(1);
     });
 
+    it('rejects unexpected fields instead of ignoring them', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/auth/login',
+        payload: { username: 'admin', password: PASSWORD, role: 'admin' },
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
     it('requires JSON bodies for login so cross-site form posts are refused', async () => {
       const res = await app.inject({
         method: 'POST',

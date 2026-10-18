@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { Pool } from 'mysql2/promise';
 import { registerAuth, type AuthOptions } from './auth/routes.js';
+import { registerCards } from './cards/routes.js';
 
 export interface AppDeps {
   pool: Pick<Pool, 'query'>;
@@ -13,7 +14,11 @@ export interface AppDeps {
 const CHECK_TIMEOUT_MS = 2000;
 
 export function buildApp(deps: AppDeps, logger: boolean | object = true): FastifyInstance {
-  const app = Fastify({ logger, trustProxy: deps.trustProxy ?? false });
+  const app = Fastify({
+    logger,
+    trustProxy: deps.trustProxy ?? false,
+    ajv: { customOptions: { removeAdditional: false } },
+  });
   const doFetch = deps.fetchImpl ?? fetch;
 
   app.get('/health', async () => ({ status: 'ok' }));
@@ -43,7 +48,8 @@ export function buildApp(deps: AppDeps, logger: boolean | object = true): Fastif
   });
 
   if (deps.auth) {
-    registerAuth(app, deps.auth);
+    const { authenticate } = registerAuth(app, deps.auth);
+    registerCards(app, { pool: deps.auth.pool, authenticate });
   }
 
   return app;

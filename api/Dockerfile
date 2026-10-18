@@ -13,6 +13,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY api/package.json ./
 COPY db/migrations ./migrations
+COPY db/data ./data
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=3s --retries=5 \

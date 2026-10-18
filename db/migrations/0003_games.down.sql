@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS game_events;
+DROP TABLE IF EXISTS game_piles;
+DROP TABLE IF EXISTS game_players;
+DROP TABLE IF EXISTS games;

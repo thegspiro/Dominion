@@ -196,7 +196,7 @@ export function registerAuth(app: FastifyInstance, options: AuthOptions): { auth
     return { user: { id: user.id, username: user.username, role: user.role }, csrfToken };
   });
 
-  app.post('/auth/logout', { preHandler: authenticate }, async (request, reply) => {
+  app.post('/auth/logout', { onRequest: authenticate }, async (request, reply) => {
     if (request.sessionId) {
       await deleteSession(pool, request.sessionId);
     }
@@ -205,12 +205,12 @@ export function registerAuth(app: FastifyInstance, options: AuthOptions): { auth
     return reply.code(204).send();
   });
 
-  app.get('/auth/me', { preHandler: authenticate }, async (request) => ({
+  app.get('/auth/me', { onRequest: authenticate }, async (request) => ({
     user: request.user,
     csrfToken: request.csrfToken,
   }));
 
-  app.post('/auth/invites', { preHandler: requireAdmin }, async (request, reply) => {
+  app.post('/auth/invites', { onRequest: requireAdmin }, async (request, reply) => {
     const adminId = request.user?.id;
     if (adminId === undefined) {
       return reply.code(401).send({ error: 'unauthorized' });

@@ -1,0 +1,52 @@
+CREATE TABLE IF NOT EXISTS games (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  owner_user_id BIGINT UNSIGNED NOT NULL,
+  status ENUM('active', 'finished', 'abandoned') NOT NULL DEFAULT 'active',
+  player_count TINYINT UNSIGNED NOT NULL,
+  current_seat TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  turn_number INT UNSIGNED NOT NULL DEFAULT 1,
+  actions SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  buys SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  coins SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  version INT UNSIGNED NOT NULL DEFAULT 1,
+  notes TEXT NOT NULL,
+  started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ended_at TIMESTAMP NULL DEFAULT NULL,
+  KEY idx_games_owner_started (owner_user_id, started_at),
+  CONSTRAINT fk_games_owner FOREIGN KEY (owner_user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS game_players (
+  game_id CHAR(36) NOT NULL,
+  seat TINYINT UNSIGNED NOT NULL,
+  name VARCHAR(32) NOT NULL,
+  vp SMALLINT NOT NULL DEFAULT 0,
+  turns_taken INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (game_id, seat),
+  CONSTRAINT fk_game_players_game FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS game_piles (
+  game_id CHAR(36) NOT NULL,
+  pile_key VARCHAR(48) NOT NULL,
+  label VARCHAR(80) NOT NULL,
+  kind ENUM('treasure', 'victory', 'curse', 'kingdom') NOT NULL,
+  card_id CHAR(36) NULL DEFAULT NULL,
+  count SMALLINT UNSIGNED NOT NULL,
+  start_count SMALLINT UNSIGNED NOT NULL,
+  enforced TINYINT(1) NOT NULL,
+  position TINYINT UNSIGNED NOT NULL,
+  PRIMARY KEY (game_id, pile_key),
+  CONSTRAINT fk_game_piles_game FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE,
+  CONSTRAINT fk_game_piles_card FOREIGN KEY (card_id) REFERENCES cards (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS game_events (
+  game_id CHAR(36) NOT NULL,
+  seq INT UNSIGNED NOT NULL,
+  type VARCHAR(16) NOT NULL,
+  payload MEDIUMTEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (game_id, seq),
+  CONSTRAINT fk_game_events_game FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

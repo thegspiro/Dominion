@@ -2,6 +2,8 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import type { Pool } from 'mysql2/promise';
 import { registerAuth, type AuthOptions } from './auth/routes.js';
 import { registerCards } from './cards/routes.js';
+import type { Rules } from './games/rules.js';
+import { registerGames } from './games/routes.js';
 
 export interface AppDeps {
   pool: Pick<Pool, 'query'>;
@@ -9,6 +11,7 @@ export interface AppDeps {
   fetchImpl?: typeof fetch;
   auth?: Omit<AuthOptions, 'pool'> & { pool: Pool };
   trustProxy?: boolean;
+  rules?: Rules;
 }
 
 const CHECK_TIMEOUT_MS = 2000;
@@ -50,6 +53,9 @@ export function buildApp(deps: AppDeps, logger: boolean | object = true): Fastif
   if (deps.auth) {
     const { authenticate } = registerAuth(app, deps.auth);
     registerCards(app, { pool: deps.auth.pool, authenticate });
+    if (deps.rules) {
+      registerGames(app, { pool: deps.auth.pool, authenticate, rules: deps.rules });
+    }
   }
 
   return app;

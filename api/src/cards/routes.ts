@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Pool, RowDataPacket } from 'mysql2/promise';
 import type { Authenticate } from '../auth/routes.js';
 
-interface CardRow extends RowDataPacket {
+export interface CardRow extends RowDataPacket {
   id: string;
   name_en: string;
   name_de: string;
@@ -48,7 +48,7 @@ function likePattern(text: string): string {
   return `%${text.replace(/[!%_]/g, (ch) => `!${ch}`)}%`;
 }
 
-async function describeCards(pool: Pool, rows: CardRow[]): Promise<CardView[]> {
+export async function describeCards(pool: Pool, rows: CardRow[]): Promise<CardView[]> {
   if (rows.length === 0) {
     return [];
   }
@@ -93,7 +93,7 @@ async function describeCards(pool: Pool, rows: CardRow[]): Promise<CardView[]> {
 export function registerCards(app: FastifyInstance, options: { pool: Pool; authenticate: Authenticate }): void {
   const { pool, authenticate } = options;
 
-  app.get('/editions', { preHandler: authenticate }, async () => {
+  app.get('/editions', { onRequest: authenticate }, async () => {
     const [rows] = await pool.query<RowDataPacket[]>(
       `SELECT e.id, e.name_en, e.name_de, e.release_date, COUNT(ec.card_id) AS card_count
          FROM editions e LEFT JOIN edition_cards ec ON ec.edition_id = e.id
@@ -110,12 +110,12 @@ export function registerCards(app: FastifyInstance, options: { pool: Pool; authe
     };
   });
 
-  app.get('/card-types', { preHandler: authenticate }, async () => {
+  app.get('/card-types', { onRequest: authenticate }, async () => {
     const [rows] = await pool.query<RowDataPacket[]>('SELECT DISTINCT type FROM card_types ORDER BY type');
     return { types: rows.map((r) => String(r['type'])) };
   });
 
-  app.get('/cards', { preHandler: authenticate, schema: { querystring: listQuery } }, async (request, reply) => {
+  app.get('/cards', { onRequest: authenticate, schema: { querystring: listQuery } }, async (request, reply) => {
     const query = request.query as {
       q?: string;
       edition?: string;
@@ -171,7 +171,7 @@ export function registerCards(app: FastifyInstance, options: { pool: Pool; authe
   app.get(
     '/cards/:id',
     {
-      preHandler: authenticate,
+      onRequest: authenticate,
       schema: {
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string', pattern: UUID_PATTERN } } },
       },

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - Accept invite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <h1>Accept your invite</h1>
+    <form id="invite-form">
+      <label for="username">Choose a username</label>
+      <input id="username" name="username" type="text" autocomplete="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_\-]{3,32}">
+      <label for="password">Choose a password (12-128 characters)</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+      <button type="submit">Create account</button>
+    </form>
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+  </main>
+  <script type="module" src="js/invite.js"></script>
+</body>
+</html>

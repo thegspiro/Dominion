@@ -21,3 +21,28 @@ describe('loadConfig', () => {
     expect(() => loadConfig({ ...base, DB_PORT: '70000' })).toThrow('DB_PORT');
   });
 });
+
+describe('loadConfig auth settings', () => {
+  it('defaults to secure cookies, no proxy trust and no setup token', () => {
+    const config = loadConfig(base);
+    expect(config.cookieSecure).toBe(true);
+    expect(config.trustProxy).toBe(false);
+    expect(config.setupToken).toBeUndefined();
+  });
+
+  it('reads overrides', () => {
+    const config = loadConfig({ ...base, COOKIE_SECURE: 'false', TRUST_PROXY: 'true', SETUP_TOKEN: 'a-long-enough-token' });
+    expect(config.cookieSecure).toBe(false);
+    expect(config.trustProxy).toBe(true);
+    expect(config.setupToken).toBe('a-long-enough-token');
+  });
+
+  it('treats an empty SETUP_TOKEN as unset', () => {
+    expect(loadConfig({ ...base, SETUP_TOKEN: '' }).setupToken).toBeUndefined();
+  });
+
+  it('rejects a short SETUP_TOKEN and non-boolean flags', () => {
+    expect(() => loadConfig({ ...base, SETUP_TOKEN: 'short' })).toThrow('SETUP_TOKEN');
+    expect(() => loadConfig({ ...base, COOKIE_SECURE: 'yes' })).toThrow('COOKIE_SECURE');
+  });
+});

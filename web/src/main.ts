@@ -1,3 +1,5 @@
+import { currentUser } from './api.js';
+
 interface ReadyResponse {
   status: string;
   checks?: Record<string, string>;
@@ -19,4 +21,25 @@ async function showStatus(target: HTMLElement): Promise<void> {
 const statusEl = document.getElementById('status');
 if (statusEl) {
   void showStatus(statusEl);
+}
+
+const accountEl = document.getElementById('account');
+if (accountEl) {
+  void (async () => {
+    const user = await currentUser();
+    if (user) {
+      accountEl.textContent = `Signed in as ${user.username}`;
+      if (user.role === 'admin') {
+        const link = document.createElement('a');
+        link.href = '/admin.html';
+        link.textContent = ' (admin)';
+        accountEl.append(link);
+      }
+    } else {
+      const link = document.createElement('a');
+      link.href = '/login.html';
+      link.textContent = 'Log in';
+      accountEl.append(link);
+    }
+  })();
 }

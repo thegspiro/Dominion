@@ -24,3 +24,44 @@ main {
 .status[data-state="fail"] {
   background: #f3d5d1;
 }
+
+h2 {
+  margin-top: 2rem;
+}
+
+label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  font: inherit;
+  border: 1px solid #b9b3a3;
+  border-radius: 0.25rem;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  border: 0;
+  border-radius: 0.25rem;
+  background: #2d4a3e;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status:empty {
+  display: none;
+}

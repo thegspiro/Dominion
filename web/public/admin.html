@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - Admin</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <h1>Administration</h1>
+    <p id="who"></p>
+    <h2>Invite a friend</h2>
+    <button id="create-invite" type="button" disabled>Create invite link</button>
+    <div id="invite-result" hidden>
+      <label for="invite-link">Send this link to your friend</label>
+      <input id="invite-link" type="text" readonly>
+      <p id="invite-expiry"></p>
+    </div>
+    <p><button id="logout" type="button">Log out</button></p>
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+  </main>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

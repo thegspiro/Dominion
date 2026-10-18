@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - First-time setup</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <h1>First-time setup</h1>
+    <p>Create the administrator account. You need the <code>SETUP_TOKEN</code> configured on the server.</p>
+    <form id="setup-form">
+      <label for="setupToken">Setup token</label>
+      <input id="setupToken" name="setupToken" type="password" autocomplete="off" required maxlength="256">
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" autocomplete="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_\-]{3,32}">
+      <label for="password">Password (12-128 characters)</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+      <button type="submit">Create administrator</button>
+    </form>
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+  </main>
+  <script type="module" src="js/setup.js"></script>
+</body>
+</html>

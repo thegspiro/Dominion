@@ -70,6 +70,23 @@ Search by English or German name, filter by edition or type, or tick **Kingdom c
 
 The browser shows names, costs, types and editions only. Card text and rulings are not included yet.
 
+## Kingdom setup
+
+Choose **Kingdom setup** on the home page to build the ten cards for a game. Press **Randomize kingdom** for a draw, then keep what you like and re-roll the rest.
+
+![Kingdom setup on a phone](images/18-kingdom-setup-phone.png)
+
+- **Sets to draw from** (tap to expand) narrows the draw to the editions you pick. Choose none to draw from every set.
+- **Filters** set the cheapest and most expensive card, and tick types to leave out, for example Attack if you want a friendly game.
+- **Lock** keeps a card when you press Randomize again; only unlocked cards are replaced.
+- **Never draw** removes a card from every future draw. **Always include** puts it in every draw. Both lists belong to your account and are shown at the bottom of the page, where you can search for more cards to add and remove any of them. You can always include at most ten cards, and an always-included card stays in the draw even if the filters would otherwise leave it out.
+
+A random draw only picks cards that are an ordinary pile of their own: it never picks Events, Landmarks or other cards that are not in the supply, nor Knights, Castles, Ruins, Looters or split piles, and never the basic Potion, Platinum or Colony cards. If the filters leave too few cards, the page says so.
+
+![Saving a kingdom and your card lists](images/19-kingdom-save-lists-phone.png)
+
+Type a name and press **Save kingdom** to keep the ten cards (names are unique per account, and you can keep up to 200). Saved kingdoms are listed below with **Load**, **Start game** and **Delete**. **Start a game with this kingdom** opens the new-game page with the ten cards already chosen; you only add the player names.
+
 ## Playing a game
 
 Choose **Games** on the home page, then **Start a new game**. A game belongs to the account that started it, and other accounts cannot see it.

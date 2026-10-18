@@ -49,6 +49,12 @@ The API (sign-in required) offers `GET /cards` (filters `q`, `edition`, `type`, 
 
 API (sign-in required; unknown fields are rejected): `GET /kingdoms/random?edition=&count=`, `GET /games`, `POST /games`, `GET /games/:id`, `POST /games/:id/actions`. Every change carries the `expectedVersion` the client last saw; a stale version gets `409` with the current game, so two devices cannot overwrite each other. Rollback of the game tables: `npm --prefix api run migrate -- down` (removes the latest migration only, deleting saved games).
 
+## Kingdom setup
+
+`/kingdom.html` draws a kingdom and keeps the ones you like. A draw can be limited to editions, a cost range and types to leave out; cards you lock stay, your "never draw" cards are skipped, and your "always include" cards are always in. Draws only use cards that can be an ordinary pile (see the game tracker section for what is excluded). Saved kingdoms and the two card lists are private to each account.
+
+API (sign-in required; unknown fields are rejected): `POST /kingdoms/draw` (`editions`, `minCost`, `maxCost`, `excludeTypes`, `lockedIds`, `count`), `GET /kingdoms`, `GET /kingdoms/:id`, `POST /kingdoms` (`name`, ten `cardIds`), `DELETE /kingdoms/:id`, `GET /card-preferences` and `PUT /card-preferences/:cardId` (`ban`, `require` or `null`). Limits: 200 saved kingdoms and ten always-include cards per account, 500 list entries in total. Rollback of the kingdom tables: `npm --prefix api run migrate -- down` (removes the latest migration only, deleting saved kingdoms and the card lists).
+
 ## Tests
 
     npm --prefix api ci && npm --prefix api test
@@ -56,4 +62,4 @@ API (sign-in required; unknown fields are rejected): `GET /kingdoms/random?editi
     python -m venv .venv && .venv/bin/pip install -r sim/requirements-dev.txt && (cd sim && ../.venv/bin/python -m pytest)
     npm --prefix web ci && npm --prefix web run typecheck
 
-The MySQL-backed tests drop and recreate `schema_migrations`, the account, card and game tables, `widget` and `gadget`; point them at a throwaway database.
+The MySQL-backed tests drop and recreate `schema_migrations`, the account, card, game and kingdom tables, `widget` and `gadget`; point them at a throwaway database.

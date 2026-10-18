@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - New game</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <p><a href="/games.html">Games</a></p>
+    <h1>New game</h1>
+
+    <h2>Players</h2>
+    <label for="player-count">Number of players</label>
+    <select id="player-count">
+      <option value="2" selected>2 players</option>
+      <option value="3">3 players</option>
+      <option value="4">4 players</option>
+    </select>
+    <div id="player-names"></div>
+
+    <h2>Kingdom cards</h2>
+    <p id="kingdom-count" role="status"></p>
+    <ul id="kingdom" class="cards"></ul>
+
+    <label for="random-edition">Random 10 from</label>
+    <select id="random-edition"><option value="">Any edition</option></select>
+    <button id="random" type="button">Random 10</button>
+    <p class="hint">Check the ten cards before you start. Replace any you do not want to play with.</p>
+
+    <label for="card-search">Or search for a card to add</label>
+    <input id="card-search" type="search" maxlength="64" autocomplete="off">
+    <ul id="search-results" class="cards"></ul>
+
+    <label class="check"><input id="prosperity" type="checkbox"> Use Platinum and Colony piles</label>
+
+    <button id="start" type="button" disabled>Start game</button>
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+  </main>
+  <script type="module" src="js/new-game.js"></script>
+</body>
+</html>

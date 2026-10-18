@@ -6,6 +6,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { SESSION_COOKIE } from '../src/auth/routes.js';
 import { applyMigrations } from '../src/migrate.js';
+import { resetDatabase } from './helpers/db.js';
 
 const dbHost = process.env['TEST_DB_HOST'];
 const migrationsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../db/migrations');
@@ -25,7 +26,7 @@ describe.skipIf(!dbHost)('auth routes against MySQL', () => {
       database: process.env['TEST_DB_NAME'] ?? 'dominion_test',
       multipleStatements: true,
     });
-    await pool.query('DROP TABLE IF EXISTS invites, sessions, users, schema_migrations');
+    await resetDatabase(pool);
     await applyMigrations(pool, migrationsDir, { info: () => undefined });
   });
 
@@ -34,7 +35,9 @@ describe.skipIf(!dbHost)('auth routes against MySQL', () => {
   });
 
   beforeEach(async () => {
-    await pool.query('SET FOREIGN_KEY_CHECKS = 0; TRUNCATE invites; TRUNCATE sessions; TRUNCATE users; SET FOREIGN_KEY_CHECKS = 1');
+    await pool.query(
+      'SET FOREIGN_KEY_CHECKS = 0; TRUNCATE invites; TRUNCATE sessions; TRUNCATE users; SET FOREIGN_KEY_CHECKS = 1',
+    );
     app = buildApp(
       {
         pool,
@@ -212,6 +215,11 @@ describe.skipIf(!dbHost)('auth routes against MySQL', () => {
       expect(Number(blocked.headers['retry-after'])).toBeGreaterThan(0);
       const correct = await app.inject({ method: 'POST', url: '/auth/login', payload: { username: 'admin', password: PASSWORD } });
       expect(correct.statusCode).toBe(429);
+    });
+
+    it('answers 401 before looking at the body when nobody is signed in', async () => {
+      const res = await app.inject({ method: 'POST', url: '/auth/invites', payload: { junk: true } });
+      expect(res.statusCode).toBe(401);
     });
 
     it('rejects requests without a session, with a bogus session, and with an expired session', async () => {

@@ -129,4 +129,88 @@ label.check input {
   max-width: 20rem;
   height: auto;
   border-radius: 0.5rem;
+a.button, button.primary {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  background: #2d4a3e;
+  color: #fff;
+  text-decoration: none;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #5e5a4e;
+}
+
+.steppers {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.stepper {
+  flex: 1 1 0;
+  padding: 0.5rem 0.25rem;
+  border: 1px solid #d9d3c0;
+  border-radius: 0.5rem;
+  background: #fffdf8;
+  text-align: center;
+}
+
+.stepper .label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #5e5a4e;
+}
+
+.stepper .value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stepper .buttons,
+.controls,
+.turn-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.controls {
+  justify-content: flex-start;
+  margin-top: 0.4rem;
+}
+
+.stepper button,
+.controls button,
+.turn-actions button {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  margin-top: 0;
+}
+
+.controls input[type="number"] {
+  width: 5rem;
+  margin-top: 0;
+  min-height: 2.75rem;
+}
+
+.turn-actions {
+  margin: 1rem 0;
+}
+
+.pile.empty {
+  background: #e8e4d8;
+}
+
+.player.current {
+  border-color: #2d4a3e;
+  background: #eef3ee;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }

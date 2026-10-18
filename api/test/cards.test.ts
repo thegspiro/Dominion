@@ -7,6 +7,7 @@ import { buildApp } from '../src/app.js';
 import { loadDataset, type Dataset } from '../src/cards/dataset.js';
 import { importDataset } from '../src/cards/importer.js';
 import { applyMigrations, rollbackLast } from '../src/migrate.js';
+import { resetDatabase } from './helpers/db.js';
 
 const dbHost = process.env['TEST_DB_HOST'];
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -35,7 +36,7 @@ describe.skipIf(!dbHost)('card import and API against MySQL', () => {
       database: process.env['TEST_DB_NAME'] ?? 'dominion_test',
       multipleStatements: true,
     });
-    await pool.query('DROP TABLE IF EXISTS edition_cards, card_types, cards, editions, invites, sessions, users, schema_migrations');
+    await resetDatabase(pool);
     await applyMigrations(pool, path.join(root, 'db/migrations'), silent);
     dataset = await loadDataset(path.join(root, 'db/data'));
     await importDataset(pool, dataset, silent);
@@ -106,6 +107,7 @@ describe.skipIf(!dbHost)('card import and API against MySQL', () => {
 
   describe('migration rollback', () => {
     it('drops the card tables with the down migration and restores them on re-apply', async () => {
+      expect(await rollbackLast(pool, path.join(root, 'db/migrations'), silent)).toBe('0003');
       expect(await rollbackLast(pool, path.join(root, 'db/migrations'), silent)).toBe('0002');
       const [gone] = await pool.query<mysql.RowDataPacket[]>("SHOW TABLES LIKE 'cards'");
       expect(gone).toHaveLength(0);
@@ -168,6 +170,17 @@ describe.skipIf(!dbHost)('card import and API against MySQL', () => {
       expect(attacks.items.some((c: { name: { en: string } }) => c.name.en === 'Ambassador')).toBe(true);
       const victory = (await get('/cards?type=Victory&q=Island')).json();
       expect(victory.items[0].types).toEqual(['Action', 'Victory']);
+    });
+
+    it('serves the corrected types for Death Cart and Miser', async () => {
+      const types = async (name: string) =>
+        ((await get(`/cards?q=${encodeURIComponent(name)}&limit=5`)).json().items as { name: { en: string }; types: string[] }[]).find(
+          (c) => c.name.en === name,
+        )?.types;
+      expect(await types('Death Cart')).toEqual(['Action', 'Looter']);
+      expect(await types('Miser')).toEqual(['Action']);
+      const looters = (await get('/cards?type=Looter&limit=50')).json().items as { name: { en: string } }[];
+      expect(looters.map((c) => c.name.en).sort()).toEqual(['Cultist', 'Death Cart', 'Marauder']);
     });
 
     it('filters by edition and matches the edition card counts', async () => {

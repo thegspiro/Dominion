@@ -1,0 +1,31 @@
+{
+  "confirmedBy": "project owner",
+  "confirmedOn": "2026-10-18",
+  "playerCounts": { "min": 2, "max": 4 },
+  "copper": { "total": 60, "startingPerPlayer": 7 },
+  "silver": 40,
+  "gold": 30,
+  "potion": 16,
+  "platinum": 12,
+  "victoryPile": { "2": 8, "3": 12, "4": 12 },
+  "colony": { "2": 8, "3": 12, "4": 12 },
+  "curse": { "2": 10, "3": 20, "4": 30 },
+  "kingdomPile": 10,
+  "emptyPilesEndingGame": 3,
+  "endingPiles": ["province", "colony"],
+  "tieBreak": "fewer-turns",
+  "groupingsNote": "notSupplyTypes, notSupplyCards, manualPileTypes, manualPileCards and needsExtraPileTypes are conservative groupings assembled from the card data. They have NOT been confirmed against the rulebooks: they decide which cards Random 10 may pick, which picks are refused, and which piles are counted by hand instead of enforced.",
+  "notSupplyTypes": [
+    "Event", "Landmark", "Project", "Way", "Trait", "Prophecy", "Ally", "Boon", "Hex", "State",
+    "Artifact", "Loot", "Prize", "Reward", "Heirloom", "Shelter", "Zombie", "Spirit", "Mat"
+  ],
+  "notSupplyCards": ["Spoils", "Madman", "Mercenary", "Horse", "Wish", "Bat", "Vampire", "Potion", "Platinum", "Colony"],
+  "manualPileTypes": [
+    "Knight", "Castle", "Ruins", "Traveller", "Augur", "Clash", "Fort", "Odyssey", "Townsfolk", "Wizard"
+  ],
+  "manualPileCards": [
+    "Encampment", "Plunder", "Patrician", "Emporium", "Settlers", "Bustling Village",
+    "Catapult", "Rocks", "Gladiator", "Fortune", "Sauna", "Avanto"
+  ],
+  "needsExtraPileTypes": ["Looter"]
+}

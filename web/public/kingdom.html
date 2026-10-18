@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - Kingdom setup</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <p><a href="/">Home</a></p>
+    <h1>Kingdom setup</h1>
+
+    <details id="editions-section">
+      <summary id="editions-summary">Sets to draw from: any</summary>
+      <div id="editions" class="chips" role="group" aria-label="Sets to draw from"></div>
+      <p class="hint">Choose none to draw from every set.</p>
+    </details>
+
+    <details>
+      <summary>Filters</summary>
+      <label for="min-cost">Cheapest card</label>
+      <select id="min-cost"><option value="">Any</option></select>
+      <label for="max-cost">Most expensive card</label>
+      <select id="max-cost"><option value="">Any</option></select>
+      <fieldset>
+        <legend>Leave out cards of these types</legend>
+        <div id="avoid" class="checks"></div>
+      </fieldset>
+    </details>
+
+    <p><button id="randomize" type="button" class="primary">Randomize kingdom</button></p>
+    <p id="summary" role="status"></p>
+    <ul id="kingdom" class="cards"></ul>
+
+    <h2>Save or play</h2>
+    <label for="kingdom-name">Name</label>
+    <input id="kingdom-name" type="text" maxlength="60" autocomplete="off">
+    <p class="turn-actions">
+      <button id="save" type="button" disabled>Save kingdom</button>
+      <button id="play" type="button" class="primary" disabled>Start a game with this kingdom</button>
+    </p>
+
+    <h2>Saved kingdoms</h2>
+    <p id="saved-empty" hidden>No saved kingdoms yet.</p>
+    <ul id="saved" class="cards"></ul>
+
+    <h2>Your card lists</h2>
+    <h3>Never draw</h3>
+    <ul id="banned" class="cards"></ul>
+    <h3>Always include</h3>
+    <ul id="required" class="cards"></ul>
+    <label for="list-search">Add a card to a list</label>
+    <input id="list-search" type="search" maxlength="64" autocomplete="off">
+    <ul id="list-results" class="cards"></ul>
+
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+  </main>
+  <script type="module" src="js/kingdom.js"></script>
+</body>
+</html>

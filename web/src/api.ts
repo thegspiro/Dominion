@@ -16,7 +16,7 @@ export function setCsrfToken(token: string | null): void {
   csrfToken = token;
 }
 
-export async function api<T>(path: string, method: 'GET' | 'POST' = 'GET', payload?: unknown): Promise<ApiResult<T>> {
+export async function api<T>(path: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', payload?: unknown): Promise<ApiResult<T>> {
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (payload !== undefined) {
     headers['Content-Type'] = 'application/json';

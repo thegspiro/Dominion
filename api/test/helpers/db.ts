@@ -1,6 +1,9 @@
 import type { Pool } from 'mysql2/promise';
 
 const TABLES = [
+  'card_preferences',
+  'kingdom_cards',
+  'kingdoms',
   'game_events',
   'game_piles',
   'game_players',

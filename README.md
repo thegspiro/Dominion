@@ -43,6 +43,16 @@ Cost notation is parsed into coins, potions, debt and a "variable cost" flag (`3
 
 The API (sign-in required) offers `GET /cards` (filters `q`, `edition`, `type`, `minCost`, `maxCost`, `potion`, `kingdom`, `limit`, `offset`; unknown parameters are rejected), `GET /cards/:id`, `GET /editions` and `GET /card-types`. Rollback of the card tables: `npm --prefix api run migrate -- down` (removes the latest migration only).
 
+## Card pictures
+
+Card pictures are copyrighted artwork, so they are not part of this project, its Docker images or (from now on) its git history. You host them yourself in a folder and the web container serves it read-only at `/cards/`.
+
+- Put one file per card in the folder, named after the card in lower case with dashes and no apostrophes: `copper.webp`, `kings-court.webp`, `death-cart.jpg`. `.webp`, `.jpg` and `.png` are supported (tried in that order). The API reports each card's expected name as `imageSlug`.
+- Point compose at the folder with `CARDS_DIR` in `.env` (default `./cards`). On Unraid use a path such as `/mnt/user/appdata/dominion/cards`. The folder is mounted read-only, and the files must be readable by other users (for example `chmod -R a+rX`) because the web server does not run as root.
+- Nothing is loaded until you press **Show picture** on a card in the card browser, so a missing picture costs nothing. If the file is not found, the page says which file name to add.
+- Only plain picture file names under `/cards/` are served; directory listings and any other file type return 404. `cards/*.webp`, `.jpg` and `.png` are git-ignored so pictures are not committed by accident. (`cards/copper.webp`, added earlier, is already in the history; remove it with `git rm --cached cards/copper.webp` if you want it out of future commits.)
+- Pictures can be large (the Copper file is about 0.5 MB), so shrinking them to roughly 400 px wide keeps pages light.
+
 ## Game tracker
 
 `/games.html` lists your games, `/new-game.html` starts one (2-4 players, ten kingdom cards chosen by hand or with Random 10) and `/game.html` is the table view: turn, actions/buys/coins, supply piles, victory points, Undo, and end-of-game detection. The supply rules are in `db/data/supply-rules.json` (pile sizes by player count, end conditions, tie-break), confirmed by the project owner. The file also holds conservative groupings of cards that need special handling (not in the supply, or counted by hand); those groupings have **not** been checked against the rulebooks, and the file says so. Piles for Knights, Castles, Ruins, Travellers and split piles are therefore counted by hand rather than enforced.

@@ -68,7 +68,9 @@ Search by English or German name, filter by edition or type, or tick **Kingdom c
 
 ![Card browser filtered on a phone](images/12-cards-filtered-phone.png)
 
-The browser shows names, costs, types and editions only. Card text and rulings are not included yet.
+Each card has a **Show picture** button. It loads the picture from your own cards folder (see "Card pictures" in the README for the file names) and **Hide picture** removes it again. If a card has no picture file yet, the page tells you which file name to add. The pictures are not included with the project.
+
+The browser shows names, costs, types, editions and pictures only. Card text and rulings are not included yet.
 
 ## Playing a game
 

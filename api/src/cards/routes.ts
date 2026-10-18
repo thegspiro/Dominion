@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { Pool, RowDataPacket } from 'mysql2/promise';
 import type { Authenticate } from '../auth/routes.js';
+import { imageSlug } from './image.js';
 
 export interface CardRow extends RowDataPacket {
   id: string;
@@ -17,6 +18,7 @@ export interface CardRow extends RowDataPacket {
 interface CardView {
   id: string;
   name: { en: string; de: string };
+  imageSlug: string;
   cost: { price: string; coins: number | null; potions: number; debt: number; variable: boolean };
   kingdom: boolean;
   types: string[];
@@ -77,6 +79,7 @@ export async function describeCards(pool: Pool, rows: CardRow[]): Promise<CardVi
   return rows.map((r) => ({
     id: r.id,
     name: { en: r.name_en, de: r.name_de },
+    imageSlug: imageSlug(r.name_en),
     cost: {
       price: r.price,
       coins: r.cost_coins,

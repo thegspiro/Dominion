@@ -1,8 +1,10 @@
 import { api, byId, currentUser } from './api.js';
+import { button, el } from './dom.js';
 
 interface CardView {
   id: string;
   name: { en: string; de: string };
+  imageSlug: string;
   cost: { price: string; coins: number | null; potions: number; debt: number; variable: boolean };
   kingdom: boolean;
   types: string[];
@@ -42,6 +44,27 @@ function describeCost(cost: CardView['cost']): string {
   return parts.join(' + ');
 }
 
+const PICTURE_TYPES = ['webp', 'jpg', 'png'];
+
+/** Shows the picture from the cards folder, trying each supported file type; says so when there is none. */
+function showPicture(card: CardView, holder: HTMLElement): void {
+  holder.replaceChildren();
+  let attempt = 0;
+  const image = el('img', { className: 'card-picture', attrs: { alt: `${card.name.en} card`, loading: 'lazy' } });
+  image.addEventListener('error', () => {
+    attempt += 1;
+    if (attempt < PICTURE_TYPES.length) {
+      image.src = `/cards/${card.imageSlug}.${PICTURE_TYPES[attempt]}`;
+    } else {
+      holder.replaceChildren(
+        el('p', { className: 'hint', text: `No picture found. Add ${card.imageSlug}.webp, .jpg or .png to your cards folder.` }),
+      );
+    }
+  });
+  image.src = `/cards/${card.imageSlug}.${PICTURE_TYPES[0]}`;
+  holder.append(image);
+}
+
 function renderCard(card: CardView): HTMLLIElement {
   const item = document.createElement('li');
   const name = document.createElement('strong');
@@ -56,7 +79,18 @@ function renderCard(card: CardView): HTMLLIElement {
   const top = document.createElement('div');
   top.className = 'top';
   top.append(name, cost);
-  item.append(top, detail);
+  const holder = el('div', { className: 'picture' });
+  let shown = false;
+  const toggle = button('Show picture', () => {
+    shown = !shown;
+    toggle.textContent = shown ? 'Hide picture' : 'Show picture';
+    if (shown) {
+      showPicture(card, holder);
+    } else {
+      holder.replaceChildren();
+    }
+  }, { aria: `Show or hide the picture of ${card.name.en}` });
+  item.append(top, detail, toggle, holder);
   return item;
 }
 

@@ -119,6 +119,16 @@ label.check input {
   color: #5e5a4e;
 }
 
+.picture {
+  margin-top: 0.5rem;
+}
+
+.card-picture {
+  display: block;
+  width: 100%;
+  max-width: 20rem;
+  height: auto;
+  border-radius: 0.5rem;
 a.button, button.primary {
   display: inline-block;
   padding: 0.5rem 1rem;

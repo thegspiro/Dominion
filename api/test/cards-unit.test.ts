@@ -63,11 +63,13 @@ describe('card snapshot', () => {
     const dataset = await loadDataset(dataDir);
     expect(dataset.cards).toHaveLength(852);
     expect(dataset.editions).toHaveLength(24);
-    expect(dataset.appliedCorrections).toEqual(['Ambassador', 'Island']);
+    expect(dataset.appliedCorrections).toEqual(['Ambassador', 'Death Cart', 'Island', 'Miser']);
 
     const byName = (name: string) => dataset.cards.find((c) => c.nameEn === name);
     expect(byName('Ambassador')?.types.sort()).toEqual(['Action', 'Attack']);
     expect(byName('Island')?.types.sort()).toEqual(['Action', 'Victory']);
+    expect(byName('Death Cart')?.types.sort()).toEqual(['Action', 'Looter']);
+    expect(byName('Miser')?.types).toEqual(['Action']);
     expect(byName('Village')?.cost.coins).toBe(3);
     expect(byName('Transmute')?.cost).toEqual({ coins: 0, potions: 1, debt: 0, variable: false });
     expect(byName('Annex')?.cost.debt).toBe(8);

@@ -3,23 +3,68 @@
     {
       "name": "Ambassador",
       "expectedMatches": 1,
-      "wasTypes": ["Action"],
-      "types": ["Action", "Attack"],
+      "wasTypes": [
+        "Action"
+      ],
+      "types": [
+        "Action",
+        "Attack"
+      ],
       "reason": "Ambassador is an Attack card; the snapshot lists only Action.",
       "evidence": [
         "https://github.com/cypressf/dominion cards.csv lists Action and Attack",
-        "https://github.com/mressler/RanDominion dominionCards.js lists isAction and isAttack"
+        "https://github.com/mressler/RanDominion dominionCards.js lists isAction and isAttack",
+        "Card image (Rio Grande Games, 2009 print) shows the type line 'Action - Attack'"
+      ]
+    },
+    {
+      "name": "Death Cart",
+      "expectedMatches": 1,
+      "wasTypes": [
+        "Action"
+      ],
+      "types": [
+        "Action",
+        "Looter"
+      ],
+      "reason": "Death Cart is an Action - Looter card; the snapshot lists only Action, so it would not be recognised as needing a Ruins pile.",
+      "evidence": [
+        "Card image (Rio Grande Games, 2012 print) shows the type line 'Action-Looter' and 'When you gain this, gain 2 Ruins'",
+        "https://www.dominiondeck.com card list shows action looter",
+        "https://github.com/mressler/RanDominion dominionCards.js marks Death Cart isLooter"
       ]
     },
     {
       "name": "Island",
       "expectedMatches": 1,
-      "wasTypes": ["Victory"],
-      "types": ["Action", "Victory"],
+      "wasTypes": [
+        "Victory"
+      ],
+      "types": [
+        "Action",
+        "Victory"
+      ],
       "reason": "Island is an Action - Victory card; the snapshot lists only Victory.",
       "evidence": [
         "https://github.com/cypressf/dominion cards.csv lists Action and Victory",
-        "https://github.com/mressler/RanDominion dominionCards.js lists isAction and isVictory"
+        "https://github.com/mressler/RanDominion dominionCards.js lists isAction and isVictory",
+        "Card image (Rio Grande Games, 2009 print) shows the type line 'Action - Victory'"
+      ]
+    },
+    {
+      "name": "Miser",
+      "expectedMatches": 1,
+      "wasTypes": [
+        "Action",
+        "Reserve"
+      ],
+      "types": [
+        "Action"
+      ],
+      "reason": "Miser is a plain Action card (it uses the Tavern mat but is not a Reserve card); the snapshot lists Reserve as well.",
+      "evidence": [
+        "Card image (Rio Grande Games, 2015 print) shows the type line 'Action'",
+        "https://www.dominiondeck.com card list shows action only"
       ]
     }
   ]

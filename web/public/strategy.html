@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - Strategy lab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <p><a href="/">Home</a></p>
+    <h1>Strategy lab</h1>
+
+    <h2>Opening hand odds</h2>
+    <p class="hint">Starting deck of 7 Copper and 3 Estate, first five-card hand. These are exact counts out of all 252 possible hands.</p>
+    <div id="odds"></div>
+    <div id="splits" class="splits"></div>
+
+    <h2>Simulate two strategies</h2>
+    <p class="hint">Plays many two-player games between two buy rules and compares them. The rules are this app&rsquo;s own simple definitions, so results describe those rules only. Only the base cards Copper, Silver, Gold, Estate, Duchy, Province and Smithy are simulated.</p>
+    <form id="simulate" novalidate>
+      <label for="strategy-a">Strategy A</label>
+      <select id="strategy-a" required></select>
+      <p id="description-a" class="hint"></p>
+      <label for="strategy-b">Strategy B</label>
+      <select id="strategy-b" required></select>
+      <p id="description-b" class="hint"></p>
+      <label for="games">Number of games (1 to 5000)</label>
+      <input id="games" type="number" inputmode="numeric" min="1" max="5000" step="1" value="1000" required>
+      <label for="seed">Seed (optional, to repeat a run)</label>
+      <input id="seed" type="number" inputmode="numeric" min="0" max="4294967295" step="1">
+      <button id="run" class="primary" type="submit" disabled>Run simulation</button>
+    </form>
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+    <div id="results" hidden></div>
+  </main>
+  <script type="module" src="js/strategy.js"></script>
+</body>
+</html>

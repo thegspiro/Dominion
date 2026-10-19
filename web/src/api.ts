@@ -56,6 +56,11 @@ const MESSAGES: Record<string, string> = {
   invalid_invite: 'This invite link is invalid, expired, or already used.',
   username_taken: 'That username is already taken.',
   not_found: 'Setup has already been completed.',
+  too_many_runs: 'You have run several simulations in the last minute. Please wait a moment and try again.',
+  run_in_progress: 'A simulation is already running. Please wait for it to finish.',
+  sim_unavailable: 'The simulation service is not available right now. Please try again later.',
+  sim_timeout: 'The simulation took too long. Try fewer games.',
+  unknown_strategy: 'That strategy is not available.',
 };
 
 export function errorMessage(res: ApiResult<{ error?: string }>): string {

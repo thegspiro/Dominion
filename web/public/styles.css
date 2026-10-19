@@ -129,6 +129,8 @@ label.check input {
   max-width: 20rem;
   height: auto;
   border-radius: 0.5rem;
+}
+
 a.button, button.primary {
   display: inline-block;
   padding: 0.5rem 1rem;
@@ -291,4 +293,66 @@ legend {
 .controls button {
   padding: 0.4rem 0.65rem;
   font-size: 0.85rem;
+}
+
+main {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+@media (min-width: 48rem) {
+  main.wide {
+    max-width: 56rem;
+  }
+
+  main.wide .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    align-items: start;
+  }
+
+  main.wide .cards li {
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  main.wide .steppers,
+  main.wide form {
+    max-width: 36rem;
+  }
+}
+
+@media (min-width: 72rem) {
+  main.wide {
+    max-width: 72rem;
+  }
+
+  main.wide .cards {
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  }
+}
+
+@media (max-height: 30rem) and (orientation: landscape) {
+  main {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  h1 {
+    margin: 0.25rem 0;
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    margin-top: 1rem;
+  }
+
+  .stepper .value {
+    font-size: 1.5rem;
+    line-height: 1.1;
+  }
+
+  .turn-actions {
+    margin: 0.5rem 0;
+  }
 }

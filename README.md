@@ -69,6 +69,10 @@ API (sign-in required; unknown fields are rejected): `POST /kingdoms/draw` (`edi
 
 `/history.html` lists finished games and computes a player's record, head-to-head results, how games ended, and kingdom-card win rates; `/game-log.html?id=...` shows one game's scores and a timeline built from its saved events. Everything is read from the existing game tables (no migration) through `GET /api/history`, `GET /api/stats` and `GET /api/games/:id/log`, scoped to the signed-in account. `/stats` reads up to the 5,000 most recent finished games. Wins use the tracker's own rule (most points, then fewer turns; equal turns share the win). See [docs/user-guide.md](docs/user-guide.md#game-history-and-stats).
 
+## Strategy lab
+
+`/strategy.html` shows the exact odds for the opening hand and compares two buy rules by playing many two-player games in the Python `sim` service. The browser never talks to `sim`: it calls `/api/strategy/*`, which needs a signed-in session, validates the request, allows one run at a time per user, limits a user to 6 runs a minute, and times out after 30 seconds. Runs hold at most 5,000 games, are not saved, and can be repeated with a seed. Only Copper, Silver, Gold, Estate, Duchy, Province and Smithy are simulated, and the two buy rules (`sim/app/strategies.py`) are this app's own definitions. See [docs/user-guide.md](docs/user-guide.md#strategy-lab).
+
 ## Tests
 
     npm --prefix api ci && npm --prefix api test

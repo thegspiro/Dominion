@@ -149,6 +149,25 @@ Choose a game to open its **game log**: the final scores, the kingdom, and a tur
 
 ![A game log on a phone](images/27-game-log-phone.png)
 
+## Strategy lab
+
+**Strategy lab** (from the home page) has two parts.
+
+**Opening hand odds** are exact: with a starting deck of 7 Copper and 3 Estate, your first five cards hold $2, $3, $4 or $5 with the chances shown (counted out of all 252 possible hands). Your two opening hands split $3 and $4 in 83.3% of deals and $2 and $5 in 16.7%.
+
+**Simulate two strategies** plays many two-player games between two buy rules and shows each rule's win rate, the average turn it reaches 4 Provinces, and how often games tie. Choose a rule for each side, enter 1 to 5000 games, and press **Run simulation**. The first player alternates from game to game so neither side keeps the first-turn edge. The result shows the seed used; enter the same seed to repeat a run exactly.
+
+![Strategy lab on a phone, after a run](images/23-strategy-lab-phone.png)
+
+![Strategy lab on a desktop](images/24-strategy-lab-desktop.png)
+
+Things to know:
+
+- The two rules, Big Money and Big Money with Smithy, are this app's own simple definitions (they are described under each menu), not a published or tuned standard. Results describe those rules only.
+- Only Copper, Silver, Gold, Estate, Duchy, Province and Smithy exist in the simulation; no other cards can be tested yet.
+- Runs are not saved. You can run 6 simulations a minute, one at a time; a 5,000-game run takes a few seconds.
+- If the simulation service is down, the odds and the Run button are unavailable and the page says so.
+
 ## Screen sizes
 
 Every page adapts to the screen: phones and tablets in portrait or landscape, and desktop browsers. Sign-in and account pages stay a single narrow column. The card browser, Kingdom setup, game list and game tracker use the extra width: card and pile lists flow into two to four columns, and on a landscape phone the page tightens its spacing so the counters and scores stay in view. Buttons stay at least 44 px tall on every size. The screenshots below are the game tracker.

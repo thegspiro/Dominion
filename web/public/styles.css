@@ -403,7 +403,7 @@ main {
   color: #2d4a3e;
 }
 
-.cards progress {
+progress {
   width: 100%;
   height: 0.9rem;
   accent-color: #2d4a3e;
@@ -411,4 +411,35 @@ main {
 
 .timeline li > span:only-child {
   margin-left: 5.25rem;
+}
+
+.odds-row {
+  display: grid;
+  grid-template-columns: 5rem 1fr;
+  grid-template-areas: "label value" "bar bar";
+  align-items: baseline;
+  gap: 0.15rem 0.75rem;
+  margin: 0.6rem 0;
+}
+
+.odds-label {
+  grid-area: label;
+  font-weight: 600;
+}
+
+.odds-value {
+  grid-area: value;
+  justify-self: end;
+}
+
+.odds-row progress {
+  grid-area: bar;
+}
+
+@media (min-width: 30rem) {
+  .odds-row {
+    grid-template-columns: 5rem 1fr 11rem;
+    grid-template-areas: "label bar value";
+    align-items: center;
+  }
 }

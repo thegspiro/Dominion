@@ -130,6 +130,25 @@ Victory points are entered by hand, so the result is only as accurate as the sco
 - Events, Landmarks, Projects, Ways, Traits, Prophecies, Allies and other non-supply cards cannot be chosen as kingdom piles yet.
 - Card effects are not applied. The tracker counts piles and points; you move coins and actions yourself.
 
+## Game history and stats
+
+**History and stats** (from the home page or the Games page) shows your finished games and what they add up to.
+
+- **Show stats for** lists every player name seen in finished games. Names are matched ignoring upper and lower case, so "Friend" and "friend" are one player. Your choice is remembered in this browser. A typo in a name makes a separate player, so keep names consistent when you start games.
+- The top tiles show wins, losses and shared wins, the number of finished games, and the win rate. A shared win (equal points and equal turns) counts as a tie, not a win.
+- **Against each opponent** compares you with each opponent in every game you both played, by points and then fewer turns.
+- **How games ended** counts games that ended by the Province pile, the Colony pile, three empty piles, or by hand with **Finish game** before any ending was reached.
+- **Cards you win with most** is the share of finished games you won when a card was one of the ten kingdom cards. It is not the cards in your deck, because the tracker does not record who bought what. A card appears once it has been in at least 3 games, and ties do not count as wins, so treat small numbers with care.
+- **Recent games** lists finished games, newest first; **Show more** loads older ones. Only finished games count: abandoned and unfinished games are left out.
+
+![History and stats on a phone](images/25-history-stats-phone.png)
+
+![History and stats on a desktop](images/26-history-stats-desktop.png)
+
+Choose a game to open its **game log**: the final scores, the kingdom, and a turn-by-turn list of what was entered (buys, returns, points, resource changes, end of turn). Anything you undid is not shown, because undo removes it.
+
+![A game log on a phone](images/27-game-log-phone.png)
+
 ## Screen sizes
 
 Every page adapts to the screen: phones and tablets in portrait or landscape, and desktop browsers. Sign-in and account pages stay a single narrow column. The card browser, Kingdom setup, game list and game tracker use the extra width: card and pile lists flow into two to four columns, and on a landscape phone the page tightens its spacing so the counters and scores stay in view. Buttons stay at least 44 px tall on every size. The screenshots below are the game tracker.

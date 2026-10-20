@@ -65,6 +65,10 @@ API (sign-in required; unknown fields are rejected): `GET /kingdoms/random?editi
 
 API (sign-in required; unknown fields are rejected): `POST /kingdoms/draw` (`editions`, `minCost`, `maxCost`, `excludeTypes`, `lockedIds`, `count`), `GET /kingdoms`, `GET /kingdoms/:id`, `POST /kingdoms` (`name`, ten `cardIds`), `DELETE /kingdoms/:id`, `GET /card-preferences` and `PUT /card-preferences/:cardId` (`ban`, `require` or `null`). Limits: 200 saved kingdoms and ten always-include cards per account, 500 list entries in total. Rollback of the kingdom tables: `npm --prefix api run migrate -- down` (removes the latest migration only, deleting saved kingdoms and the card lists).
 
+## Game history and stats
+
+`/history.html` lists finished games and computes a player's record, head-to-head results, how games ended, and kingdom-card win rates; `/game-log.html?id=...` shows one game's scores and a timeline built from its saved events. Everything is read from the existing game tables (no migration) through `GET /api/history`, `GET /api/stats` and `GET /api/games/:id/log`, scoped to the signed-in account. `/stats` reads up to the 5,000 most recent finished games. Wins use the tracker's own rule (most points, then fewer turns; equal turns share the win). See [docs/user-guide.md](docs/user-guide.md#game-history-and-stats).
+
 ## Tests
 
     npm --prefix api ci && npm --prefix api test

@@ -5,6 +5,7 @@ import { registerCards } from './cards/routes.js';
 import type { Rules } from './games/rules.js';
 import { registerGames } from './games/routes.js';
 import { registerKingdoms } from './kingdoms/routes.js';
+import { registerStats } from './stats/routes.js';
 
 export interface AppDeps {
   pool: Pick<Pool, 'query'>;
@@ -57,6 +58,7 @@ export function buildApp(deps: AppDeps, logger: boolean | object = true): Fastif
     if (deps.rules) {
       registerGames(app, { pool: deps.auth.pool, authenticate, rules: deps.rules });
       registerKingdoms(app, { pool: deps.auth.pool, authenticate, rules: deps.rules });
+      registerStats(app, { pool: deps.auth.pool, authenticate, rules: deps.rules });
     }
   }
 

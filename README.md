@@ -65,6 +65,10 @@ API (sign-in required; unknown fields are rejected): `GET /kingdoms/random?editi
 
 API (sign-in required; unknown fields are rejected): `POST /kingdoms/draw` (`editions`, `minCost`, `maxCost`, `excludeTypes`, `lockedIds`, `count`), `GET /kingdoms`, `GET /kingdoms/:id`, `POST /kingdoms` (`name`, ten `cardIds`), `DELETE /kingdoms/:id`, `GET /card-preferences` and `PUT /card-preferences/:cardId` (`ban`, `require` or `null`). Limits: 200 saved kingdoms and ten always-include cards per account, 500 list entries in total. Rollback of the kingdom tables: `npm --prefix api run migrate -- down` (removes the latest migration only, deleting saved kingdoms and the card lists).
 
+## Strategy lab
+
+`/strategy.html` shows the exact odds for the opening hand and compares two buy rules by playing many two-player games in the Python `sim` service. The browser never talks to `sim`: it calls `/api/strategy/*`, which needs a signed-in session, validates the request, allows one run at a time per user, limits a user to 6 runs a minute, and times out after 30 seconds. Runs hold at most 5,000 games, are not saved, and can be repeated with a seed. Only Copper, Silver, Gold, Estate, Duchy, Province and Smithy are simulated, and the two buy rules (`sim/app/strategies.py`) are this app's own definitions. See [docs/user-guide.md](docs/user-guide.md#strategy-lab).
+
 ## Tests
 
     npm --prefix api ci && npm --prefix api test

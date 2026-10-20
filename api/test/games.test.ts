@@ -250,8 +250,9 @@ describe.skipIf(!dbHost)('game tracker against MySQL', () => {
       game = (await act(owner, game, { type: 'return', pileKey: 'gold' })).json();
       expect(pile(game, 'gold').count).toBe(29);
       game = (await act(owner, game, { type: 'resource', resource: 'coins', delta: 7 })).json();
+      expect(game.resources.buys).toBe(0);
       game = (await act(owner, game, { type: 'resource', resource: 'buys', delta: 1 })).json();
-      expect(game.resources).toEqual({ actions: 1, buys: 2, coins: 7 });
+      expect(game.resources).toEqual({ actions: 1, buys: 1, coins: 7 });
       game = (await act(owner, game, { type: 'vp', seat: 1, delta: 6 })).json();
       expect(game.players[1].vp).toBe(6);
       game = (await act(owner, game, { type: 'end_turn' })).json();
@@ -259,6 +260,31 @@ describe.skipIf(!dbHost)('game tracker against MySQL', () => {
       game = (await act(owner, game, { type: 'end_turn' })).json();
       expect([game.currentSeat, game.turnNumber]).toEqual([0, 2]);
       expect(game.version).toBe(8);
+    });
+
+    it('uses one Buy for each card taken, never goes below zero, and undo restores both', async () => {
+      let game = await newGame();
+      expect(game.resources.buys).toBe(1);
+      game = (await act(owner, game, { type: 'take', pileKey: 'silver' })).json();
+      expect([pile(game, 'silver').count, game.resources.buys]).toEqual([39, 0]);
+      game = (await act(owner, game, { type: 'take', pileKey: 'silver' })).json();
+      expect([pile(game, 'silver').count, game.resources.buys]).toEqual([38, 0]);
+      game = (await act(owner, game, { type: 'return', pileKey: 'silver' })).json();
+      expect([pile(game, 'silver').count, game.resources.buys]).toEqual([39, 0]);
+      game = (await act(owner, game, { type: 'undo' })).json();
+      expect([pile(game, 'silver').count, game.resources.buys]).toEqual([38, 0]);
+      game = (await act(owner, game, { type: 'undo' })).json();
+      game = (await act(owner, game, { type: 'undo' })).json();
+      expect([pile(game, 'silver').count, game.resources.buys]).toEqual([40, 1]);
+    });
+
+    it('lets an extra Buy be used by a second card', async () => {
+      let game = await newGame();
+      game = (await act(owner, game, { type: 'resource', resource: 'buys', delta: 1 })).json();
+      game = (await act(owner, game, { type: 'take', pileKey: 'copper' })).json();
+      expect(game.resources.buys).toBe(1);
+      game = (await act(owner, game, { type: 'take', pileKey: 'copper' })).json();
+      expect(game.resources.buys).toBe(0);
     });
 
     it('persists state across requests', async () => {

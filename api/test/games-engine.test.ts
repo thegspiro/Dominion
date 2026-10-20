@@ -181,6 +181,34 @@ describe('applyAction', () => {
     });
   });
 
+  it('uses one Buy for each card taken and never lets Buys go below zero', () => {
+    let state = newGame(['A', 'B']);
+    expect(state.buys).toBe(1);
+    state = must(state, { type: 'take', pileKey: 'silver', quantity: 1 });
+    expect(state.buys).toBe(0);
+    state = must(state, { type: 'take', pileKey: 'silver', quantity: 1 });
+    expect(state.buys).toBe(0);
+    state = must(state, { type: 'resource', resource: 'buys', delta: 3 });
+    state = must(state, { type: 'take', pileKey: 'gold', quantity: 2 });
+    expect(state.buys).toBe(1);
+    state = must(state, { type: 'take', pileKey: 'gold', quantity: 4 });
+    expect(state.buys).toBe(0);
+  });
+
+  it('leaves Buys alone when a card is returned', () => {
+    let state = newGame(['A', 'B']);
+    state = must(state, { type: 'take', pileKey: 'silver', quantity: 1 });
+    state = must(state, { type: 'resource', resource: 'buys', delta: 2 });
+    state = must(state, { type: 'return', pileKey: 'silver', quantity: 1 });
+    expect(state.buys).toBe(2);
+  });
+
+  it('does not use a Buy when the take is refused', () => {
+    const state = newGame(['A', 'B']);
+    expect(applyAction(state, { type: 'take', pileKey: 'province', quantity: 9 }, rules).ok).toBe(false);
+    expect(state.buys).toBe(1);
+  });
+
   it('does not change the state it was given', () => {
     const state = newGame(['A', 'B']);
     const before = structuredClone(state);

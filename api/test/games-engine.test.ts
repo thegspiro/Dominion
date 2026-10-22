@@ -330,3 +330,94 @@ describe('gameResult', () => {
     expect(gameResult(withScores([[-3, 10], [-5, 10]])).winners).toEqual([0]);
   });
 });
+
+describe('player decks', () => {
+  const cardsOf = (state: ReturnType<typeof newGame>, seat: number) => state.players[seat]?.cards ?? {};
+
+  it('credits a taken card to the player whose turn it is', () => {
+    let state = newGame(['A', 'B']);
+    state = must(state, { type: 'take', pileKey: 'silver', quantity: 2 });
+    expect(cardsOf(state, 0)).toEqual({ silver: 2 });
+    expect(cardsOf(state, 1)).toEqual({});
+    state = must(state, { type: 'end_turn' });
+    state = must(state, { type: 'take', pileKey: 'gold', quantity: 1 });
+    expect(cardsOf(state, 1)).toEqual({ gold: 1 });
+    expect(cardsOf(state, 0)).toEqual({ silver: 2 });
+  });
+
+  it('credits another player when a seat is named, and then uses no Buy', () => {
+    let state = newGame(['A', 'B', 'C']);
+    state = must(state, { type: 'take', pileKey: 'curse', quantity: 1, seat: 2 });
+    expect(cardsOf(state, 2)).toEqual({ curse: 1 });
+    expect(cardsOf(state, 0)).toEqual({});
+    expect(state.buys).toBe(1);
+    expect(count(state, 'curse')).toBe(19);
+    state = must(state, { type: 'take', pileKey: 'curse', quantity: 1, seat: 0 });
+    expect(state.buys).toBe(0);
+  });
+
+  it('refuses an unknown seat without changing anything', () => {
+    const state = newGame(['A', 'B']);
+    expect(applyAction(state, { type: 'take', pileKey: 'silver', quantity: 1, seat: 2 }, rules)).toEqual({ ok: false, reason: 'unknown_player' });
+    expect(applyAction(state, { type: 'return', pileKey: 'silver', quantity: 1, seat: 3 }, rules)).toEqual({ ok: false, reason: 'unknown_player' });
+    expect(applyAction(state, { type: 'trash', pileKey: 'silver', seat: 5 }, rules)).toEqual({ ok: false, reason: 'unknown_player' });
+    expect(count(state, 'silver')).toBe(40);
+  });
+
+  it('takes a returned card out of the deck only when the player holds one', () => {
+    let state = newGame(['A', 'B']);
+    state = must(state, { type: 'take', pileKey: 'silver', quantity: 2 });
+    state = must(state, { type: 'return', pileKey: 'silver', quantity: 1 });
+    expect(cardsOf(state, 0)).toEqual({ silver: 1 });
+    expect(count(state, 'silver')).toBe(39);
+    state = must(state, { type: 'return', pileKey: 'silver', quantity: 1 });
+    expect(cardsOf(state, 0)).toEqual({});
+    expect(count(state, 'silver')).toBe(40);
+    state = must(state, { type: 'take', pileKey: 'silver', quantity: 1, seat: 1 });
+    state = must(state, { type: 'return', pileKey: 'silver', quantity: 1 });
+    expect(cardsOf(state, 0)).toEqual({});
+    expect(cardsOf(state, 1)).toEqual({ silver: 1 });
+    expect(count(state, 'silver')).toBe(40);
+  });
+
+  it('returns a card for the named player', () => {
+    let state = newGame(['A', 'B']);
+    state = must(state, { type: 'take', pileKey: 'curse', quantity: 1, seat: 1 });
+    state = must(state, { type: 'return', pileKey: 'curse', quantity: 1, seat: 1 });
+    expect(cardsOf(state, 1)).toEqual({});
+  });
+
+  it('trashes one card from a deck without touching the pile', () => {
+    let state = newGame(['A', 'B']);
+    state = must(state, { type: 'take', pileKey: 'estate', quantity: 2 });
+    const piles = count(state, 'estate');
+    state = must(state, { type: 'trash', pileKey: 'estate' });
+    expect(cardsOf(state, 0)).toEqual({ estate: 1 });
+    expect(count(state, 'estate')).toBe(piles);
+    state = must(state, { type: 'trash', pileKey: 'estate' });
+    expect(cardsOf(state, 0)).toEqual({});
+  });
+
+  it('cannot trash a card the player does not hold', () => {
+    const state = newGame(['A', 'B']);
+    expect(applyAction(state, { type: 'trash', pileKey: 'estate' }, rules)).toEqual({ ok: false, reason: 'not_owned' });
+    expect(applyAction(state, { type: 'trash', pileKey: 'nope' }, rules)).toEqual({ ok: false, reason: 'unknown_pile' });
+  });
+
+  it('does not change the state it was given', () => {
+    const state = newGame(['A', 'B']);
+    const before = structuredClone(state);
+    must(state, { type: 'take', pileKey: 'silver', quantity: 3, seat: 1 });
+    expect(state).toEqual(before);
+  });
+
+  it('keeps working on a state saved before decks were tracked', () => {
+    const state = newGame(['A', 'B']);
+    for (const player of state.players) {
+      delete player.cards;
+    }
+    const next = must(state, { type: 'take', pileKey: 'silver', quantity: 1 });
+    expect(next.players[0]?.cards).toEqual({ silver: 1 });
+    expect(applyAction(state, { type: 'trash', pileKey: 'silver' }, rules)).toEqual({ ok: false, reason: 'not_owned' });
+  });
+});

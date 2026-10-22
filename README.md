@@ -59,6 +59,17 @@ Card pictures are copyrighted artwork, so they are not part of this project, its
 
 API (sign-in required; unknown fields are rejected): `GET /kingdoms/random?edition=&count=`, `GET /games`, `POST /games`, `GET /games/:id`, `POST /games/:id/actions`. Every change carries the `expectedVersion` the client last saw; a stale version gets `409` with the current game, so two devices cannot overwrite each other. Rollback of the game tables: `npm --prefix api run migrate -- down` (removes the latest migration only, deleting saved games).
 
+### Player decks
+
+The tracker records which player took each card (`game_player_cards`, migration `0005_game_cards`; `games.cards_source` is `tracked`, `rebuilt` or `none`). `take` and `return` accept an optional `seat` (default: the current player; a card for another player uses no Buy), and `trash` removes one card from a player's deck. Decks appear in `GET /api/games/:id` (`players[].cards`), `GET /api/games/:id/log` (`decks`, `cardsSource`) and `GET /api/stats` (`deckCards`, `deckGames`, `rebuiltGames`). Starting cards are not counted.
+
+Games played before this migration are marked `none`. After migrating, run this once to fill them in from their saved events (safe to repeat; it only touches games still marked `none`, and credits each card to the player whose turn it was):
+
+    docker compose run --rm api node dist/cli/rebuild-decks.js
+    npm --prefix api run rebuild-decks      # without Docker
+
+Rollback of `0005` (`npm --prefix api run migrate -- down`) drops `game_player_cards` and `games.cards_source`; only deck data is lost.
+
 ## Kingdom setup
 
 `/kingdom.html` draws a kingdom and keeps the ones you like. A draw can be limited to editions, a cost range and types to leave out; cards you lock stay, your "never draw" cards are skipped, and your "always include" cards are always in. Draws only use cards that can be an ordinary pile (see the game tracker section for what is excluded). Saved kingdoms and the two card lists are private to each account.

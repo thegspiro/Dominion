@@ -220,3 +220,49 @@ describe('logItem', () => {
     expect(logItem(1, 1, { action: { type: 'end_turn' }, before: { players: 'x', piles: [] } })).toBeNull();
   });
 });
+
+describe('computeStats deck numbers', () => {
+  const withCards = (g: FinishedGame, cards: Record<string, number>, source: FinishedGame['cardsSource'], seat = 0): FinishedGame => {
+    const copy = structuredClone(g);
+    copy.cardsSource = source;
+    const player = copy.players[seat];
+    if (player) {
+      player.cards = cards;
+    }
+    return copy;
+  };
+
+  const games = [
+    withCards(game('d4', 400, [['Ann', 20, 5], ['Ben', 10, 5]]), { 'card-a': 2 }, 'tracked'),
+    withCards(game('d3', 300, [['Ann', 8, 5], ['Ben', 10, 5]]), { 'card-a': 1, 'card-b': 1 }, 'rebuilt'),
+    withCards(game('d2', 200, [['Ann', 10, 5], ['Ben', 10, 5]]), { 'card-a': 3 }, 'tracked'),
+    withCards(game('d1', 100, [['Ann', 30, 5], ['Ben', 10, 5]]), { 'card-a': 5 }, 'none'),
+  ];
+
+  it('counts only games whose decks were tracked or rebuilt', () => {
+    const stats = computeStats(games, 'Ann', rules);
+    expect(stats.record.games).toBe(4);
+    expect(stats.deckGames).toBe(3);
+    expect(stats.rebuiltGames).toBe(1);
+  });
+
+  it('reports win rate and copies for cards the player took, from three games up', () => {
+    const { deckCards } = computeStats(games, 'Ann', rules);
+    expect(deckCards).toHaveLength(1);
+    expect(deckCards[0]).toMatchObject({ cardId: 'a', games: 3, wins: 1, ties: 1 });
+    expect(deckCards[0]?.winRate).toBeCloseTo(1 / 3);
+    expect(deckCards[0]?.averageCopies).toBeCloseTo(2);
+  });
+
+  it('ignores basic piles and cards held only by the opponent', () => {
+    const ben = computeStats(games, 'Ben', rules);
+    expect(ben.deckCards).toEqual([]);
+    expect(ben.deckGames).toBe(3);
+  });
+
+  it('is empty when no game has deck data', () => {
+    const none = computeStats([game('x', 1, [['Ann', 1, 1], ['Ben', 0, 1]])], 'Ann', rules);
+    expect(none.deckGames).toBe(0);
+    expect(none.deckCards).toEqual([]);
+  });
+});

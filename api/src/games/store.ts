@@ -7,6 +7,7 @@ export interface GameMeta {
   startedAt: Date;
   endedAt: Date | null;
   eventCount: number;
+  cardsSource: CardsSource;
 }
 
 export interface LoadedGame {
@@ -23,6 +24,8 @@ export interface GameSummary {
   endedAt: Date | null;
   players: string[];
 }
+
+export type CardsSource = 'tracked' | 'rebuilt' | 'none';
 
 type Queryable = Pool | PoolConnection;
 
@@ -60,7 +63,7 @@ export async function insertGame(conn: PoolConnection, id: string, ownerId: numb
 /** Loads a game owned by the given user, or null. With lock, the games row is held until the transaction ends. */
 export async function loadGame(db: Queryable, id: string, ownerId: number, lock: boolean): Promise<LoadedGame | null> {
   const [games] = await db.query<RowDataPacket[]>(
-    `SELECT id, status, player_count, current_seat, turn_number, actions, buys, coins, version, notes, started_at, ended_at
+    `SELECT id, status, player_count, current_seat, turn_number, actions, buys, coins, version, notes, started_at, ended_at, cards_source
        FROM games WHERE id = ? AND owner_user_id = ? ${lock ? 'FOR UPDATE' : ''}`,
     [id, ownerId],
   );
@@ -77,6 +80,13 @@ export async function loadGame(db: Queryable, id: string, ownerId: number, lock:
     [id],
   );
   const [events] = await db.query<RowDataPacket[]>('SELECT COUNT(*) AS n FROM game_events WHERE game_id = ?', [id]);
+  const [held] = await db.query<RowDataPacket[]>('SELECT seat, pile_key, count FROM game_player_cards WHERE game_id = ?', [id]);
+  const cardsBySeat = new Map<number, Record<string, number>>();
+  for (const row of held) {
+    const cards = cardsBySeat.get(Number(row['seat'])) ?? {};
+    cards[String(row['pile_key'])] = Number(row['count']);
+    cardsBySeat.set(Number(row['seat']), cards);
+  }
   return {
     meta: {
       id,
@@ -84,6 +94,7 @@ export async function loadGame(db: Queryable, id: string, ownerId: number, lock:
       startedAt: game['started_at'] as Date,
       endedAt: (game['ended_at'] as Date | null) ?? null,
       eventCount: Number(events[0]?.['n'] ?? 0),
+      cardsSource: game['cards_source'] as CardsSource,
     },
     state: {
       status: game['status'] as GameStatus,
@@ -100,6 +111,7 @@ export async function loadGame(db: Queryable, id: string, ownerId: number, lock:
           name: String(p['name']),
           vp: Number(p['vp']),
           turnsTaken: Number(p['turns_taken']),
+          cards: cardsBySeat.get(Number(p['seat'])) ?? {},
         }),
       ),
       piles: piles.map(
@@ -135,6 +147,27 @@ export async function saveChanges(conn: PoolConnection, id: string, before: Game
         id,
         player.seat,
       ]);
+    }
+  }
+  for (const player of after.players) {
+    if (player.cards === undefined) {
+      continue;
+    }
+    const old = before.players.find((p) => p.seat === player.seat)?.cards ?? {};
+    for (const key of new Set([...Object.keys(old), ...Object.keys(player.cards)])) {
+      const was = old[key] ?? 0;
+      const now = player.cards[key] ?? 0;
+      if (was === now) {
+        continue;
+      }
+      if (now === 0) {
+        await conn.query('DELETE FROM game_player_cards WHERE game_id = ? AND seat = ? AND pile_key = ?', [id, player.seat, key]);
+      } else {
+        await conn.query(
+          'INSERT INTO game_player_cards (game_id, seat, pile_key, count) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE count = VALUES(count)',
+          [id, player.seat, key, now],
+        );
+      }
     }
   }
   for (const pile of after.piles) {

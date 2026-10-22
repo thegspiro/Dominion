@@ -4,6 +4,7 @@ const TABLES = [
   'card_preferences',
   'kingdom_cards',
   'kingdoms',
+  'game_player_cards',
   'game_events',
   'game_piles',
   'game_players',

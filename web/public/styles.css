@@ -640,3 +640,30 @@ body.has-bar {
     min-height: 3.25rem;
   }
 }
+
+.give-chip {
+  min-height: 2.75rem;
+  margin: 0.75rem 0 0;
+  border: 1px solid #2d4a3e;
+  background: #fffdf8;
+  color: #2d4a3e;
+}
+
+.give-chip.other {
+  background: #2d4a3e;
+  color: #fff;
+}
+
+.deck-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #e8e4d8;
+}
+
+.deck-row button {
+  min-height: 2.75rem;
+  margin: 0;
+}

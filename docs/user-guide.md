@@ -110,9 +110,17 @@ The screen is built so you can play with one thumb:
 - **Taking a card uses one Buy.** The line `Actions 1 · Buys 0 · Coins 0` shows where you are; tap it to open the counters and change them. If a card gains you a card without a Buy (Workshop, for example), or you have an extra Buy, tap **+** on Buys. Buys never go below zero and a take is never blocked. **Return** does not change Buys.
 - **The bar at the bottom is always there.** **Undo** steps back one change, and the big button ends the turn ("End Ann's turn"). When the game has reached an ending it says "End turn and finish the game".
 - **Scores** show for every player with the current player highlighted. Open **Change scores** to add or remove 1, 3 or 6 points.
+- **Gaining for** shows who receives the next card. It starts on the current player. Tap it to pick another player, for example to give an opponent a Curse; the card is credited to them, uses no Buy, and the chip goes back to the current player after one card or when the turn ends. The small **-** on a tile takes a card back from the player the chip shows.
+- **Decks** lists the cards each player has taken from the supply, with a **Trash** button for each card (Chapel, Remodel and so on). Trashing removes the card from that player's list only; the supply count does not change. Starting Coppers and Estates are not listed, and cards that do not come from the supply (Prizes, Spoils) are not tracked.
 - **More** holds the rarely used things: setting hand-counted piles, the "not enforced" notes, **Finish game** and **Abandon game**.
 
 ![Game tracker on a phone](images/14-tracker-phone.png)
+
+Picking another player to receive the next card, and the Decks section opened:
+
+![Gaining for another player](images/30-tracker-gaining-for-phone.png)
+
+![Decks](images/29-tracker-decks-phone.png)
 
 Starting pile sizes follow the player count: Copper is 60 minus 7 per player; Silver 40; Gold 30; Estates, Duchies and Provinces 8 each with 2 players and 12 each with 3 or 4; Curses 10, 20 or 30; every kingdom pile 10, except Victory-type cards at 8 or 12. Potions (16) are added when a card costs a potion. Platinum (12) and Colony (8 or 12) are added when you tick the box.
 
@@ -149,16 +157,23 @@ Victory points are entered by hand, so the result is only as accurate as the sco
 - The top tiles show wins, losses and shared wins, the number of finished games, and the win rate. A shared win (equal points and equal turns) counts as a tie, not a win.
 - **Against each opponent** compares you with each opponent in every game you both played, by points and then fewer turns.
 - **How games ended** counts games that ended by the Province pile, the Colony pile, three empty piles, or by hand with **Finish game** before any ending was reached.
-- **Cards you win with most** is the share of finished games you won when a card was one of the ten kingdom cards. It is not the cards in your deck, because the tracker does not record who bought what. A card appears once it has been in at least 3 games, and ties do not count as wins, so treat small numbers with care.
+- **Cards in your deck** is the share of finished games you won when you took the card from the supply, with how many copies you took on average. A card appears once you have taken it in at least 3 games, and ties do not count as wins. Starting cards are not counted. Games played before decks were tracked count only after the one-time rebuild described below, and the page says how many were rebuilt.
+- **Cards in the kingdom** is the share of finished games you won when the card was one of the ten kingdom cards, whether or not you took it.
 - **Recent games** lists finished games, newest first; **Show more** loads older ones. Only finished games count: abandoned and unfinished games are left out.
 
 ![History and stats on a phone](images/25-history-stats-phone.png)
 
+![Cards in your deck on a phone](images/31-history-deck-cards-phone.png)
+
 ![History and stats on a desktop](images/26-history-stats-desktop.png)
 
-Choose a game to open its **game log**: the final scores, the kingdom, and a turn-by-turn list of what was entered (buys, returns, points, resource changes, end of turn). Anything you undid is not shown, because undo removes it.
+Choose a game to open its **game log**: the final scores, each player's final deck, the kingdom, and a turn-by-turn list of what was entered (buys, returns, points, resource changes, end of turn). Anything you undid is not shown, because undo removes it.
 
 ![A game log on a phone](images/27-game-log-phone.png)
+
+![Final decks on a game log](images/32-game-log-decks-phone.png)
+
+**Games played before decks were tracked** show "Decks were not tracked for this game" until the administrator runs the rebuild once (see the README). The rebuild reads each old game's saved log and credits every card taken to the player whose turn it was, so a card given to an opponent in an old game is credited to the wrong player. Those games are marked "rebuilt" on the pages that use them.
 
 ## Strategy lab
 

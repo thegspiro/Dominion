@@ -19,6 +19,8 @@ export interface PlayerState {
   name: string;
   vp: number;
   turnsTaken: number;
+  /** Cards this player took from the supply, by pile key. Sparse, and absent in snapshots saved before decks were tracked. */
+  cards?: Record<string, number>;
 }
 
 export interface GameState {
@@ -45,8 +47,9 @@ export interface KingdomCard {
 export type Resource = 'actions' | 'buys' | 'coins';
 
 export type Action =
-  | { type: 'take'; pileKey: string; quantity: number }
-  | { type: 'return'; pileKey: string; quantity: number }
+  | { type: 'take'; pileKey: string; quantity: number; seat?: number }
+  | { type: 'return'; pileKey: string; quantity: number; seat?: number }
+  | { type: 'trash'; pileKey: string; seat?: number }
   | { type: 'set_pile'; pileKey: string; count: number }
   | { type: 'resource'; resource: Resource; delta: number }
   | { type: 'vp'; seat: number; delta: number }
@@ -215,12 +218,25 @@ export function gameResult(state: Pick<GameState, 'players'>): GameResult {
 
 const fail = (reason: string): Failure => ({ ok: false, reason });
 
+/** Takes up to `quantity` copies out of a player's deck record, dropping the entry when it reaches zero. */
+function removeCards(player: PlayerState, key: string, quantity: number): void {
+  const held = player.cards?.[key] ?? 0;
+  if (held === 0) {
+    return;
+  }
+  const { [key]: _removed, ...rest } = player.cards ?? {};
+  player.cards = held - quantity > 0 ? { ...rest, [key]: held - quantity } : rest;
+}
+
 export function applyAction(state: GameState, action: Action, rules: Rules): Success | Failure {
   if (state.status !== 'active') {
     return fail('game_not_active');
   }
   const next = structuredClone(state);
   const findPile = (key: string): PileState | undefined => next.piles.find((pile) => pile.key === key);
+  /** The player an action is for: the seat it names, otherwise whoever's turn it is. */
+  const findPlayer = (seat: number | undefined): PlayerState | undefined =>
+    next.players.find((player) => player.seat === (seat ?? next.currentSeat));
 
   switch (action.type) {
     case 'take': {
@@ -228,11 +244,18 @@ export function applyAction(state: GameState, action: Action, rules: Rules): Suc
       if (!pile) {
         return fail('unknown_pile');
       }
+      const recipient = findPlayer(action.seat);
+      if (!recipient) {
+        return fail('unknown_player');
+      }
       if (pile.count < action.quantity) {
         return fail('pile_empty');
       }
       pile.count -= action.quantity;
-      next.buys = Math.max(0, next.buys - action.quantity);
+      recipient.cards = { ...recipient.cards, [pile.key]: (recipient.cards?.[pile.key] ?? 0) + action.quantity };
+      if (recipient.seat === next.currentSeat) {
+        next.buys = Math.max(0, next.buys - action.quantity);
+      }
       return { ok: true, state: next };
     }
     case 'return': {
@@ -240,11 +263,31 @@ export function applyAction(state: GameState, action: Action, rules: Rules): Suc
       if (!pile) {
         return fail('unknown_pile');
       }
+      const recipient = findPlayer(action.seat);
+      if (!recipient) {
+        return fail('unknown_player');
+      }
       const limit = pile.enforced ? pile.startCount : MAX_MANUAL_PILE;
       if (pile.count + action.quantity > limit) {
         return fail('pile_full');
       }
       pile.count += action.quantity;
+      removeCards(recipient, pile.key, action.quantity);
+      return { ok: true, state: next };
+    }
+    case 'trash': {
+      const pile = findPile(action.pileKey);
+      if (!pile) {
+        return fail('unknown_pile');
+      }
+      const recipient = findPlayer(action.seat);
+      if (!recipient) {
+        return fail('unknown_player');
+      }
+      if ((recipient.cards?.[pile.key] ?? 0) < 1) {
+        return fail('not_owned');
+      }
+      removeCards(recipient, pile.key, 1);
       return { ok: true, state: next };
     }
     case 'set_pile': {

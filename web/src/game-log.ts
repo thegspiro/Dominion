@@ -11,6 +11,18 @@ interface GameView {
   result: { winners: number[]; tiedOnPoints: boolean } | null;
 }
 
+interface Deck {
+  seat: number;
+  name: string;
+  cards: { key: string; label: string; count: number }[];
+}
+
+interface LogResponse {
+  items: LogItem[];
+  decks: Deck[];
+  cardsSource: 'tracked' | 'rebuilt' | 'none';
+}
+
 interface LogItem {
   seq: number;
   at: string;
@@ -36,6 +48,8 @@ const trackerAnchor = byId<HTMLAnchorElement>('tracker-anchor');
 const body = byId<HTMLElement>('body');
 const scores = byId<HTMLUListElement>('scores');
 const kingdom = byId<HTMLElement>('kingdom');
+const decks = byId<HTMLUListElement>('decks');
+const decksNote = byId<HTMLElement>('decks-note');
 const timeline = byId<HTMLOListElement>('timeline');
 const noEvents = byId<HTMLElement>('no-events');
 
@@ -64,7 +78,29 @@ function describe(item: LogItem): string {
   }
 }
 
-function render(game: GameView, items: LogItem[]): void {
+const DECK_NOTE: Record<LogResponse['cardsSource'], string> = {
+  tracked: 'Cards taken from the supply. Starting cards are not counted.',
+  rebuilt: 'Rebuilt from the game log. Cards given to an opponent are listed under the player whose turn it was. Starting cards are not counted.',
+  none: 'Decks were not tracked for this game.',
+};
+
+function renderDecks(log: LogResponse): void {
+  decksNote.textContent = DECK_NOTE[log.cardsSource];
+  decks.replaceChildren(
+    ...(log.cardsSource === 'none'
+      ? []
+      : log.decks.map((deck) =>
+          el('li', {}, [
+            el('strong', { text: deck.name }),
+            el('div', { className: 'detail', text: deck.cards.length === 0 ? 'Nothing taken.' : deck.cards.map((c) => `${c.label} \u00d7 ${c.count}`).join(', ') }),
+          ]),
+        )),
+  );
+}
+
+function render(game: GameView, log: LogResponse): void {
+  const items = log.items;
+  renderDecks(log);
   const winners = new Set(game.result?.winners ?? []);
   title.textContent = game.players.map((p) => p.name).join(' vs ');
   const when = new Date(game.endedAt ?? game.startedAt).toLocaleString();
@@ -111,7 +147,7 @@ void (async () => {
   }
   const [game, log] = await Promise.all([
     api<GameView>(`/games/${encodeURIComponent(id)}`),
-    api<{ items: LogItem[] }>(`/games/${encodeURIComponent(id)}/log`),
+    api<LogResponse>(`/games/${encodeURIComponent(id)}/log`),
   ]);
   if (game.status === 404 || log.status === 404 || game.status === 400) {
     message.textContent = 'That game could not be found.';
@@ -121,5 +157,5 @@ void (async () => {
     message.textContent = 'Could not load this game. Please try again.';
     return;
   }
-  render(game.body, log.body.items);
+  render(game.body, log.body);
 })();

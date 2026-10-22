@@ -13,6 +13,9 @@ interface Tally {
 interface Stats {
   name: string;
   record: Tally;
+  deckGames: number;
+  rebuiltGames: number;
+  deckCards: { cardId: string; name: string; games: number; wins: number; ties: number; winRate: number; averageCopies: number }[];
   ambiguousGames: number;
   averages: { score: number | null; opponentScore: number | null; turns: number | null };
   headToHead: (Tally & { opponent: string })[];
@@ -59,6 +62,8 @@ const headToHead = byId<HTMLUListElement>('head-to-head');
 const endings = byId<HTMLUListElement>('endings');
 const cards = byId<HTMLUListElement>('cards');
 const cardsNote = byId<HTMLElement>('cards-note');
+const deckNote = byId<HTMLElement>('deck-note');
+const deckCards = byId<HTMLUListElement>('deck-cards');
 const recent = byId<HTMLUListElement>('recent');
 const empty = byId<HTMLElement>('empty');
 const more = byId<HTMLButtonElement>('more');
@@ -131,7 +136,17 @@ function showStats(response: StatsResponse): void {
     ...(Object.keys(ENDING_TEXT) as Ending[]).map((key) => row(ENDING_TEXT[key], String(stats.endings[key]), plural(stats.endings[key], 'game'))),
   );
 
-  cardsNote.textContent = `Share of finished games you won when the card was one of the kingdom cards. This is not the cards in your deck, which the tracker does not record. Shown once a card has been in at least ${response.minCardGames} games; ties are not counted as wins.`;
+  deckNote.textContent = `Share of finished games you won when you took the card from the supply, and how many copies you took on average. Based on ${plural(stats.deckGames, 'game')} with deck data${stats.rebuiltGames > 0 ? `, ${stats.rebuiltGames} rebuilt from the game log (cards given to an opponent are credited to the player whose turn it was)` : ''}. Starting cards are not counted. Shown once you have taken a card in at least ${response.minCardGames} games; ties are not counted as wins.`;
+  deckCards.replaceChildren(
+    ...stats.deckCards.map((c) =>
+      row(c.name, percent(c.winRate), `${plural(c.games, 'game')}, ${c.wins} won, ${c.ties} tied. ${c.averageCopies.toFixed(1)} copies on average`, c.winRate),
+    ),
+  );
+  if (stats.deckCards.length === 0) {
+    deckCards.replaceChildren(el('li', { text: `You have not taken a kingdom card in ${response.minCardGames} games with deck data yet.` }));
+  }
+
+  cardsNote.textContent = `Share of finished games you won when the card was one of the ten kingdom cards, whether or not you took it. Shown once a card has been in at least ${response.minCardGames} games; ties are not counted as wins.`;
   cards.replaceChildren(
     ...stats.cards.map((c) => row(c.name, percent(c.winRate), `${plural(c.games, 'game')}, ${c.wins} won, ${c.ties} tied`, c.winRate)),
   );

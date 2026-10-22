@@ -38,8 +38,13 @@ const root = byId<HTMLElement>('game');
 const message = byId<HTMLElement>('message');
 const gameId = new URLSearchParams(window.location.search).get('id') ?? '';
 
+const status = byId<HTMLElement>('status');
+const bar = byId<HTMLElement>('bar');
+
 let game: Game | null = null;
 let busy = false;
+let note = '';
+const openSections = new Set<string>();
 
 const END_TEXT: Record<string, string> = {
   province_empty: 'The Province pile is empty.',
@@ -55,22 +60,58 @@ const ERROR_TEXT: Record<string, string> = {
   nothing_to_undo: 'There is nothing to undo.',
 };
 
+const plural = (count: number, word: string): string => `${count} ${word}${count === 1 ? '' : 's'}`;
+const signed = (value: number): string => (value > 0 ? `+${value}` : String(value));
+
+function buysLeft(g: Game): string {
+  return g.resources.buys === 0 ? 'No buys left. End the turn when ready.' : `${plural(g.resources.buys, 'buy')} left.`;
+}
+
+/** A short sentence about what a change did, shown under the heading so the table can see it happened. */
+function describeChange(action: ActionBody, before: Game, after: Game): string {
+  const actor = before.players.find((p) => p.seat === before.currentSeat)?.name ?? 'Player';
+  const label = before.piles.find((p) => p.key === action['pileKey'])?.label ?? 'a card';
+  switch (action['type']) {
+    case 'take':
+      return `${actor} took ${label}. ${buysLeft(after)}`;
+    case 'return':
+      return `${actor} put back ${label}.`;
+    case 'set_pile':
+      return `${label} was set to ${action['count']}.`;
+    case 'vp': {
+      const who = before.players.find((p) => p.seat === action['seat'])?.name ?? 'Player';
+      return `${who}: ${signed(Number(action['delta']))} VP.`;
+    }
+    case 'end_turn':
+      return after.status === 'active' ? `${after.players.find((p) => p.seat === after.currentSeat)?.name ?? 'Next player'}'s turn.` : '';
+    case 'undo':
+      return 'Last change undone.';
+    default:
+      return '';
+  }
+}
+
 async function send(action: ActionBody): Promise<void> {
   if (busy || !game) {
     return;
   }
+  const before = game;
   busy = true;
+  document.body.classList.add('busy');
   message.textContent = '';
   const res = await api<Game & { error?: string; reason?: string; game?: Game }>(
     `/games/${encodeURIComponent(gameId)}/actions`,
     'POST',
-    { expectedVersion: game.version, action },
+    { expectedVersion: before.version, action },
   );
   busy = false;
+  document.body.classList.remove('busy');
   if (res.ok && res.body) {
     game = res.body;
+    note = describeChange(action, before, game);
   } else if (res.status === 409 && res.body?.game) {
     game = res.body.game;
+    note = '';
     message.textContent = 'The game had changed, so it was refreshed. Please try again.';
   } else if (res.status === 401) {
     window.location.replace('/login.html');
@@ -93,49 +134,93 @@ function stepper(label: string, value: number, resource: string): HTMLElement {
   ]);
 }
 
-function pileRow(pile: Pile, active: boolean): HTMLElement {
+/** A section that stays open or closed across re-renders, because every change rebuilds the page. */
+function section(id: string, summary: string, children: Node[]): HTMLElement {
+  const details = el('details', {}, [el('summary', { text: summary }), ...children]);
+  details.open = openSections.has(id);
+  details.addEventListener('toggle', () => {
+    if (details.open) {
+      openSections.add(id);
+    } else {
+      openSections.delete(id);
+    }
+  });
+  return details;
+}
+
+function supplyTile(pile: Pile): HTMLElement {
+  const left = pile.count === 0 ? 'empty' : `${pile.count} left${pile.enforced ? '' : ' (by hand)'}`;
+  const take = el('button', {
+    className: 'supply-tile',
+    attrs: { type: 'button', 'aria-label': pile.count === 0 ? `${pile.label}, empty` : `Take one ${pile.label}, ${pile.count} left` },
+  }, [el('span', { className: 'name', text: pile.label.replace(/\//g, '/\u200b') }), el('span', { className: 'left', text: left })]);
+  take.disabled = pile.count === 0;
+  take.addEventListener('click', () => void send({ type: 'take', pileKey: pile.key }));
+  const back = button('−', () => void send({ type: 'return', pileKey: pile.key }), {
+    aria: `Return one ${pile.label}`,
+    className: 'supply-return',
+    disabled: pile.enforced && pile.count >= pile.startCount,
+  });
+  return el('li', { className: 'supply-item' }, [take, back]);
+}
+
+function supplyGrid(piles: Pile[]): HTMLElement {
+  return el('ul', { className: 'supply-grid' }, piles.map(supplyTile));
+}
+
+function readOnlyPile(pile: Pile): HTMLElement {
   const count = pile.enforced ? `${pile.count} of ${pile.startCount}` : `${pile.count} (counted by hand)`;
-  const controls: Node[] = [
-    button('Take', () => void send({ type: 'take', pileKey: pile.key }), { aria: `Take one ${pile.label}`, disabled: pile.count === 0 }),
-    button('Return', () => void send({ type: 'return', pileKey: pile.key }), {
-      aria: `Return one ${pile.label}`,
-      disabled: pile.enforced && pile.count >= pile.startCount,
-    }),
-  ];
-  if (!active) {
-    return el('li', { className: pile.count === 0 ? 'pile empty' : 'pile' }, [
-      el('div', { className: 'top' }, [el('strong', { text: pile.label }), el('span', { className: 'cost', text: pile.count === 0 ? 'empty' : count })]),
-    ]);
-  }
-  if (!pile.enforced) {
-    const input = el('input', {
-      attrs: { type: 'number', min: '0', max: '999', value: String(pile.count), 'aria-label': `Cards left in ${pile.label}` },
-    });
-    input.addEventListener('change', () => {
-      const value = Number(input.value);
-      if (Number.isInteger(value) && value >= 0 && value <= 999) {
-        void send({ type: 'set_pile', pileKey: pile.key, count: value });
-      }
-    });
-    controls.push(input);
-  }
   return el('li', { className: pile.count === 0 ? 'pile empty' : 'pile' }, [
     el('div', { className: 'top' }, [el('strong', { text: pile.label }), el('span', { className: 'cost', text: pile.count === 0 ? 'empty' : count })]),
-    el('div', { className: 'controls' }, controls),
   ]);
 }
 
-function playerRow(player: Player, current: boolean, active: boolean): HTMLElement {
+function handCountedPile(pile: Pile): HTMLElement {
+  const input = el('input', {
+    attrs: { type: 'number', min: '0', max: '999', value: String(pile.count), 'aria-label': `Cards left in ${pile.label}` },
+  });
+  input.addEventListener('change', () => {
+    const value = Number(input.value);
+    if (Number.isInteger(value) && value >= 0 && value <= 999) {
+      void send({ type: 'set_pile', pileKey: pile.key, count: value });
+    }
+  });
+  return el('div', { className: 'player' }, [el('strong', { text: pile.label }), el('div', { className: 'controls' }, [input])]);
+}
+
+function scoreCard(player: Player, current: boolean): HTMLElement {
+  return el('div', { className: current ? 'score-card current' : 'score-card' }, [
+    el('div', { className: 'who', text: player.name }),
+    el('div', { className: 'vp', text: `${player.vp} VP` }),
+  ]);
+}
+
+function scoreControls(player: Player): HTMLElement {
   const buttons = [-1, 1, 3, 6].map((delta) =>
-    button(delta > 0 ? `+${delta}` : String(delta), () => void send({ type: 'vp', seat: player.seat, delta }), {
-      aria: `${delta > 0 ? 'Add' : 'Remove'} ${Math.abs(delta)} victory point${Math.abs(delta) === 1 ? '' : 's'} for ${player.name}`,
+    button(signed(delta), () => void send({ type: 'vp', seat: player.seat, delta }), {
+      aria: `${delta > 0 ? 'Add' : 'Remove'} ${plural(Math.abs(delta), 'victory point')} for ${player.name}`,
     }),
   );
-  const header = el('div', { className: 'top' }, [
-    el('strong', { text: `${player.name}${current && active ? ' (playing)' : ''}` }),
-    el('span', { className: 'cost', text: `${player.vp} VP` }),
-  ]);
-  return el('li', { className: current && active ? 'player current' : 'player' }, active ? [header, el('div', { className: 'controls' }, buttons)] : [header]);
+  return el('div', { className: 'player' }, [el('strong', { text: player.name }), el('div', { className: 'controls' }, buttons)]);
+}
+
+function setStatus(g: Game): void {
+  const text = note !== '' ? note : g.status === 'active' && g.resources.buys === 0 ? buysLeft(g) : '';
+  status.textContent = text;
+}
+
+function renderBar(g: Game, current: Player | undefined): void {
+  const undo = button('Undo', () => void send({ type: 'undo' }), { className: 'undo', disabled: !g.canUndo });
+  if (g.status === 'active') {
+    const name = current?.name ?? 'Player';
+    bar.replaceChildren(
+      el('div', { className: 'bottom-bar-inner' }, [undo, button(g.endReasons.length > 0 ? 'End turn and finish the game' : `End ${name}'s turn`, () => void send({ type: 'end_turn' }), { className: 'primary' })]),
+    );
+  } else {
+    bar.replaceChildren(el('div', { className: 'bottom-bar-inner' }, [undo]));
+  }
+  bar.hidden = false;
+  document.body.classList.add('has-bar');
 }
 
 function render(): void {
@@ -143,41 +228,44 @@ function render(): void {
     return;
   }
   const g = game;
+  const scrollY = window.scrollY;
   const active = g.status === 'active';
   const current = g.players.find((p) => p.seat === g.currentSeat);
   document.title = `Dominion Helper - ${g.players.map((p) => p.name).join(', ')}`;
+  setStatus(g);
 
   const children: Node[] = [el('p', {}, [el('a', { text: 'Games', attrs: { href: '/games.html' } })])];
 
   if (active) {
-    children.push(
-      el('h1', { text: `${current?.name ?? 'Player'}'s turn` }),
-      el('p', { className: 'detail', text: `Turn ${g.turnNumber} | ${g.players.length} players` }),
-    );
+    children.push(el('h1', { text: `${current?.name ?? 'Player'}'s turn` }), el('p', { className: 'detail', text: `Turn ${g.turnNumber}` }));
     if (g.endReasons.length > 0) {
       children.push(
         el('p', {
-          className: 'status',
+          className: 'status banner',
           text: `${g.endReasons.map((r) => END_TEXT[r] ?? r).join(' ')} The game ends when this turn ends.`,
           attrs: { role: 'status', 'data-state': 'fail' },
         }),
       );
     }
     children.push(
-      el('div', { className: 'steppers' }, [
-        stepper('Actions', g.resources.actions, 'actions'),
-        stepper('Buys', g.resources.buys, 'buys'),
-        stepper('Coins', g.resources.coins, 'coins'),
+      status,
+      message,
+      section('counters', `Actions ${g.resources.actions} · Buys ${g.resources.buys} · Coins ${g.resources.coins}`, [
+        el('div', { className: 'steppers' }, [
+          stepper('Actions', g.resources.actions, 'actions'),
+          stepper('Buys', g.resources.buys, 'buys'),
+          stepper('Coins', g.resources.coins, 'coins'),
+        ]),
       ]),
     );
   } else {
     const winners = g.result ? g.players.filter((p) => g.result?.winners.includes(p.seat)).map((p) => p.name) : [];
-    children.push(el('h1', { text: g.status === 'finished' ? 'Game over' : 'Game abandoned' }));
+    children.push(el('h1', { text: g.status === 'finished' ? 'Game over' : 'Game abandoned' }), status, message);
     if (g.status === 'finished') {
       const tie = g.result?.tiedOnPoints ? ' (tie on points, decided by turns taken)' : '';
       children.push(
         el('p', {
-          className: 'status',
+          className: 'status banner',
           text: `${winners.length > 1 ? 'Shared win' : 'Winner'}: ${winners.join(' and ')}${tie}`,
           attrs: { role: 'status', 'data-state': 'ok' },
         }),
@@ -185,29 +273,32 @@ function render(): void {
     }
   }
 
-  children.push(el('h2', { text: 'Scores' }), el('ul', { className: 'cards' }, g.players.map((p) => playerRow(p, p.seat === g.currentSeat, active))));
-
   if (active) {
-    children.push(
-      el('div', { className: 'turn-actions' }, [
-        button('End turn', () => void send({ type: 'end_turn' }), { className: 'primary' }),
-        button('Undo', () => void send({ type: 'undo' }), { disabled: !g.canUndo }),
-      ]),
-    );
+    const kingdom = g.piles.filter((p) => p.kind === 'kingdom');
+    const basic = g.piles.filter((p) => p.kind !== 'kingdom');
+    const empty = g.piles.filter((p) => p.count === 0).length;
+    if (kingdom.length > 0) {
+      children.push(el('h2', { className: 'section-title', text: 'Kingdom' }), supplyGrid(kingdom));
+    }
+    children.push(el('h2', { className: kingdom.length > 0 ? 'sub-title' : 'section-title', text: 'Basic supply' }), supplyGrid(basic));
+    children.push(el('p', { className: 'detail', text: `Empty piles: ${empty}` }));
   } else {
-    children.push(el('div', { className: 'turn-actions' }, [button('Undo', () => void send({ type: 'undo' }), { disabled: !g.canUndo })]));
+    children.push(section('supply', 'Final supply', [el('ul', { className: 'cards piles' }, g.piles.map(readOnlyPile))]));
   }
 
-  const empty = g.piles.filter((p) => p.count === 0).length;
-  children.push(el('h2', { text: 'Supply' }), el('p', { className: 'detail', text: `Empty piles: ${empty}` }));
-  children.push(el('ul', { className: 'cards piles' }, g.piles.map((p) => pileRow(p, active))));
-
-  if (g.notes.length > 0) {
-    children.push(el('h2', { text: 'Not enforced' }), el('ul', {}, g.notes.map((n) => el('li', { text: n }))));
-  }
+  children.push(el('h2', { className: 'section-title', text: 'Scores' }), el('div', { className: 'score-row' }, g.players.map((p) => scoreCard(p, active && p.seat === g.currentSeat))));
 
   if (active) {
-    children.push(
+    children.push(section('scores', 'Change scores', g.players.map(scoreControls)));
+    const manual = g.piles.filter((p) => !p.enforced);
+    const more: Node[] = [];
+    if (manual.length > 0) {
+      more.push(el('p', { className: 'detail', text: 'These piles are counted by hand. Set how many cards are left.' }), ...manual.map(handCountedPile));
+    }
+    if (g.notes.length > 0) {
+      more.push(el('h3', { text: 'Not enforced' }), el('ul', {}, g.notes.map((n) => el('li', { text: n }))));
+    }
+    more.push(
       el('div', { className: 'turn-actions' }, [
         button('Finish game', () => {
           if (window.confirm('Finish the game now and show the result?')) {
@@ -221,10 +312,14 @@ function render(): void {
         }),
       ]),
     );
+    children.push(section('more', 'More', more));
+  } else if (g.notes.length > 0) {
+    children.push(section('notes', 'Not enforced', [el('ul', {}, g.notes.map((n) => el('li', { text: n })))]));
   }
 
-  children.push(message);
   root.replaceChildren(...children);
+  renderBar(g, current);
+  window.scrollTo(0, scrollY);
 }
 
 void (async () => {

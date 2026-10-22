@@ -103,15 +103,26 @@ Random 10 only draws cards that are an ordinary pile of their own. It skips Even
 
 ### During the game
 
-The top of the screen shows whose turn it is. The three counters track Actions, Buys and Coins for the current turn and reset when you press **End turn**. Under **Scores**, the buttons add or remove victory points for each player. **Take** and **Return** move cards in and out of a supply pile, and the pile list shows how many are left.
+The screen is built so you can play with one thumb:
+
+- **Tap a card to take it.** Every pile is a big tile showing how many cards are left. Tapping the tile takes one card, and the small **-** on the tile puts one back. Kingdom cards come first, then the basic supply. Empty piles are greyed out.
+- **A line under the heading says what just happened** ("Ann took Gold. No buys left. End the turn when ready.").
+- **Taking a card uses one Buy.** The line `Actions 1 · Buys 0 · Coins 0` shows where you are; tap it to open the counters and change them. If a card gains you a card without a Buy (Workshop, for example), or you have an extra Buy, tap **+** on Buys. Buys never go below zero and a take is never blocked. **Return** does not change Buys.
+- **The bar at the bottom is always there.** **Undo** steps back one change, and the big button ends the turn ("End Ann's turn"). When the game has reached an ending it says "End turn and finish the game".
+- **Scores** show for every player with the current player highlighted. Open **Change scores** to add or remove 1, 3 or 6 points.
+- **More** holds the rarely used things: setting hand-counted piles, the "not enforced" notes, **Finish game** and **Abandon game**.
 
 ![Game tracker on a phone](images/14-tracker-phone.png)
 
 Starting pile sizes follow the player count: Copper is 60 minus 7 per player; Silver 40; Gold 30; Estates, Duchies and Provinces 8 each with 2 players and 12 each with 3 or 4; Curses 10, 20 or 30; every kingdom pile 10, except Victory-type cards at 8 or 12. Potions (16) are added when a card costs a potion. Platinum (12) and Colony (8 or 12) are added when you tick the box.
 
-The game ends at the end of the turn in which the Province pile is empty, the Colony pile is empty (when used), or any three piles are empty. When one of those happens, a banner says so, and **End turn** finishes the game.
+The game ends at the end of the turn in which the Province pile is empty, the Colony pile is empty (when used), or any three piles are empty. When one of those happens, a banner says so, the bottom button changes to "End turn and finish the game", and pressing it finishes the game.
 
 ![End of game reached](images/15-end-reached-phone.png)
+
+The sections that are closed by default, opened:
+
+![Counters, scores and More opened](images/28-tracker-sections-open-phone.png)
 
 ### Result
 

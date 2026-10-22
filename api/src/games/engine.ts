@@ -232,6 +232,7 @@ export function applyAction(state: GameState, action: Action, rules: Rules): Suc
         return fail('pile_empty');
       }
       pile.count -= action.quantity;
+      next.buys = Math.max(0, next.buys - action.quantity);
       return { ok: true, state: next };
     }
     case 'return': {

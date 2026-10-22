@@ -357,10 +357,60 @@ main {
   }
 }
 
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.tile {
+  flex: 1 1 8rem;
+  padding: 0.6rem 0.5rem;
+  border: 1px solid #d9d3c0;
+  border-radius: 0.5rem;
+  background: #fffdf8;
+  text-align: center;
+}
+
+.tile-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.tile-label {
+  font-size: 0.8rem;
+  color: #5e5a4e;
+}
+
+.timeline {
+  padding-left: 0;
+  list-style: none;
+}
+
+.timeline li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.75rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #e8e4d8;
+}
+
+.turn-heading {
+  min-width: 4.5rem;
+  color: #2d4a3e;
+}
+
 progress {
   width: 100%;
   height: 0.9rem;
   accent-color: #2d4a3e;
+}
+
+.timeline li > span:only-child {
+  margin-left: 5.25rem;
 }
 
 .odds-row {

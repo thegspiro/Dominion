@@ -182,7 +182,7 @@ export function createGame(rules: Rules, input: NewGame): CreateResult {
 
 export type EndReason = 'province_empty' | 'colony_empty' | 'piles_empty';
 
-export function endReasons(state: GameState, rules: Rules): EndReason[] {
+export function endReasons(state: { piles: Pick<PileState, 'key' | 'count'>[] }, rules: Rules): EndReason[] {
   const reasons: EndReason[] = [];
   const emptyKey = (key: string): boolean => state.piles.some((pile) => pile.key === key && pile.count === 0);
   if (rules.endingPiles.includes('province') && emptyKey('province')) {
@@ -203,7 +203,7 @@ export interface GameResult {
 }
 
 /** Highest VP wins; among tied players the fewest turns wins; otherwise the win is shared. */
-export function gameResult(state: GameState): GameResult {
+export function gameResult(state: Pick<GameState, 'players'>): GameResult {
   const best = Math.max(...state.players.map((p) => p.vp));
   const top = state.players.filter((p) => p.vp === best);
   const fewest = Math.min(...top.map((p) => p.turnsTaken));

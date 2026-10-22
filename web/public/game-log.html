@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - Game log</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="wide">
+    <p><a href="/history.html">History and stats</a> | <a href="/games.html">Games</a></p>
+    <h1 id="title">Game log</h1>
+    <p id="summary"></p>
+    <p id="tracker-link" hidden><a class="button" id="tracker-anchor" href="/games.html">Back to the tracker</a></p>
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+
+    <div id="body" hidden>
+      <h2>Scores</h2>
+      <ul id="scores" class="cards"></ul>
+      <h2>Kingdom</h2>
+      <p id="kingdom"></p>
+      <h2>What happened</h2>
+      <p class="hint">The path the game actually took. Anything undone is not shown.</p>
+      <ol id="timeline" class="timeline"></ol>
+      <p id="no-events" hidden>Nothing was recorded for this game.</p>
+    </div>
+  </main>
+  <script type="module" src="js/game-log.js"></script>
+</body>
+</html>

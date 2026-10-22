@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - History and stats</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="wide">
+    <p><a href="/">Home</a> | <a href="/games.html">Games</a></p>
+    <h1>History and stats</h1>
+    <p class="hint">Only finished games count. Abandoned and unfinished games are left out. Players are matched by name, ignoring upper and lower case.</p>
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+
+    <div id="stats-area" hidden>
+      <label for="player">Show stats for</label>
+      <select id="player"></select>
+      <p id="notes" class="hint"></p>
+
+      <div id="tiles" class="tiles"></div>
+      <p id="averages"></p>
+
+      <h2>Against each opponent</h2>
+      <ul id="head-to-head" class="cards"></ul>
+
+      <h2>How games ended</h2>
+      <ul id="endings" class="cards"></ul>
+
+      <h2>Cards you win with most</h2>
+      <p id="cards-note" class="hint"></p>
+      <ul id="cards" class="cards"></ul>
+    </div>
+
+    <h2>Recent games</h2>
+    <ul id="recent" class="cards"></ul>
+    <p id="empty" hidden>No finished games yet. Finish a game in the tracker and it appears here.</p>
+    <button id="more" type="button" hidden>Show more</button>
+  </main>
+  <script type="module" src="js/history.js"></script>
+</body>
+</html>

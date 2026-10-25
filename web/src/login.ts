@@ -2,6 +2,11 @@ import { api, byId, errorMessage, type User } from './api.js';
 
 const form = byId<HTMLFormElement>('login-form');
 const message = byId<HTMLElement>('message');
+const notice = byId<HTMLElement>('notice');
+
+if (new URLSearchParams(window.location.search).get('reset') === '1') {
+  notice.textContent = 'Your password was changed. Please sign in with the new one.';
+}
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();

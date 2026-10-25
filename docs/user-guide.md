@@ -58,6 +58,37 @@ A wrong username or a wrong password gives the same message, so the page does no
 
 ![Login error](images/10-login-error.png)
 
+## Changing or resetting a password
+
+### Change your own password
+
+On the home page choose **Change password** (administrators also find it on the administration page). Enter your current password and the new one twice. The new password must be 12 to 128 characters and different from the current one. You stay signed in on this device and are signed out everywhere else. After 8 wrong current passwords in 15 minutes the page waits before it accepts more tries.
+
+![Change password](images/33-change-password-phone.png)
+
+### Someone forgot their password
+
+There is no email, so an administrator hands the person a one-time link.
+
+1. On the administration page, find the person under **Accounts** and choose **Reset password**. A link appears; copy it and send it to them privately. Anyone who has the link can set a new password for that account until it is used or 24 hours pass, and a newer link for the same account cancels the older one.
+2. They open the link, type a new password twice, and are taken to the login page.
+3. Using the link signs that account out on every device. They then log in with the new password.
+
+![Admin reset link](images/34-admin-reset-link-phone.png)
+
+![Choose a new password](images/35-reset-password-phone.png)
+
+![Log in after a reset](images/36-login-after-reset-phone.png)
+
+### The only administrator forgot their password
+
+Run this on the server (it needs access to the database settings, so it works wherever the stack runs):
+
+    docker compose run --rm api node dist/cli/reset-password.js <username>
+    npm --prefix api run reset-password -- <username>     # without Docker
+
+It prints a link such as `/reset.html#...` for that account. Open it on your site, for example `http://localhost:8080/reset.html#...`. The link works once and expires in 24 hours. The command says so if no account has that name.
+
 ## Browsing cards
 
 Choose **Browse cards** on the home page (`/cards.html`). The list covers 852 cards from 24 editions, from the 2008 base game to Rising Sun. Each entry shows the cost, the card's types and the editions it appears in. Cards that cannot be part of a kingdom, such as Events and Landmarks, say so.
@@ -204,4 +235,4 @@ Kingdom setup on a tablet in portrait, and the card browser on a desktop:
 - Sessions last 30 days and renew while you keep using the app. **Log out** on the administration page ends the session on that device.
 - After 8 failed attempts a username is locked for 15 minutes.
 - Session cookies are marked `Secure` by default, which needs HTTPS (or `http://localhost`). If you serve plain HTTP on a LAN address, set `COOKIE_SECURE=false` in `.env`.
-- There is no password reset yet. A forgotten password currently needs a new invite.
+- A forgotten password is fixed with a one-time reset link from an administrator, or from the server for the only administrator; see "Changing or resetting a password".

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - Change password</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <p><a href="/">Home</a></p>
+    <h1>Change password</h1>
+    <form id="password-form">
+      <label for="current">Current password</label>
+      <input id="current" name="current" type="password" autocomplete="current-password" required maxlength="128">
+      <label for="password">New password (12-128 characters)</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+      <label for="repeat">New password again</label>
+      <input id="repeat" name="repeat" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+      <button type="submit">Change password</button>
+    </form>
+    <p class="hint">You stay signed in here. Anywhere else you are signed in, you will be signed out.</p>
+    <p id="done" class="status" role="status" data-state="ok"></p>
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+  </main>
+  <script type="module" src="js/account.js"></script>
+</body>
+</html>

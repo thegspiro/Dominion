@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dominion Helper - Choose a new password</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <h1>Choose a new password</h1>
+    <form id="reset-form">
+      <label for="password">New password (12-128 characters)</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+      <label for="repeat">New password again</label>
+      <input id="repeat" name="repeat" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+      <button type="submit">Set new password</button>
+    </form>
+    <p id="message" class="status" role="alert" data-state="fail"></p>
+  </main>
+  <script type="module" src="js/reset.js"></script>
+</body>
+</html>

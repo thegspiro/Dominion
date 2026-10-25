@@ -12,6 +12,7 @@ const TABLES = [
   'card_types',
   'cards',
   'editions',
+  'password_resets',
   'invites',
   'sessions',
   'users',

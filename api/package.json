@@ -11,6 +11,7 @@
     "start": "node dist/server.js",
     "migrate": "node dist/cli/migrate.js",
     "import-cards": "node dist/cli/import-cards.js",
+    "reset-password": "node dist/cli/reset-password.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

@@ -35,6 +35,10 @@ if (accountEl) {
         link.textContent = ' (admin)';
         accountEl.append(link);
       }
+      const change = document.createElement('a');
+      change.href = '/account.html';
+      change.textContent = ' | Change password';
+      accountEl.append(change);
     } else {
       const link = document.createElement('a');
       link.href = '/login.html';

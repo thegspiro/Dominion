@@ -36,7 +36,7 @@ describe.skipIf(!dbHost)('auth routes against MySQL', () => {
 
   beforeEach(async () => {
     await pool.query(
-      'SET FOREIGN_KEY_CHECKS = 0; TRUNCATE invites; TRUNCATE sessions; TRUNCATE users; SET FOREIGN_KEY_CHECKS = 1',
+      'SET FOREIGN_KEY_CHECKS = 0; TRUNCATE password_resets; TRUNCATE invites; TRUNCATE sessions; TRUNCATE users; SET FOREIGN_KEY_CHECKS = 1',
     );
     app = buildApp(
       {

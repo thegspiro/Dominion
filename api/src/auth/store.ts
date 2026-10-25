@@ -174,3 +174,112 @@ export async function redeemInvite(pool: Pool, token: string, username: string, 
     conn.release();
   }
 }
+
+export interface UserSummary extends AuthUser {
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+export async function listUsers(pool: Pool): Promise<UserSummary[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id, username, role, UNIX_TIMESTAMP(created_at) AS created, UNIX_TIMESTAMP(last_login_at) AS last_login
+       FROM users ORDER BY username`,
+  );
+  return rows.map((row) => ({
+    ...toUser(row),
+    createdAt: new Date(Number(row['created']) * 1000).toISOString(),
+    lastLoginAt: row['last_login'] === null ? null : new Date(Number(row['last_login']) * 1000).toISOString(),
+  }));
+}
+
+export async function findUserById(pool: Pool, id: number): Promise<AuthUser | null> {
+  const [rows] = await pool.query<RowDataPacket[]>('SELECT id, username, role FROM users WHERE id = ? LIMIT 1', [id]);
+  const row = rows[0];
+  return row ? toUser(row) : null;
+}
+
+/** Stores a new password hash and ends the user's other sessions, in one transaction. */
+export async function changePassword(pool: Pool, userId: number, passwordHash: string, keepSessionId: string): Promise<void> {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.query('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, userId]);
+    await conn.query('DELETE FROM sessions WHERE user_id = ? AND id <> ?', [userId, keepSessionId]);
+    await conn.commit();
+  } catch (err) {
+    await conn.rollback().catch(() => undefined);
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
+/** Makes a single-use reset link for a user. Any earlier unused link for that user stops working. */
+export async function createPasswordReset(pool: Pool, userId: number, createdBy: number | null, ttlHours: number): Promise<string> {
+  const token = generateToken();
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.query('UPDATE password_resets SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL', [userId]);
+    await conn.query(
+      'INSERT INTO password_resets (token_hash, user_id, created_by, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL ? HOUR))',
+      [hashToken(token), userId, createdBy, ttlHours],
+    );
+    await conn.commit();
+    return token;
+  } catch (err) {
+    await conn.rollback().catch(() => undefined);
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
+/** A cheap check that lets the caller skip hashing a password for a link that cannot work. */
+export async function isPasswordResetUsable(pool: Pool, token: string): Promise<boolean> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    'SELECT 1 AS ok FROM password_resets WHERE token_hash = ? AND used_at IS NULL AND expires_at > NOW() LIMIT 1',
+    [hashToken(token)],
+  );
+  return rows.length === 1;
+}
+
+export type PasswordResetResult = { status: 'ok'; user: AuthUser } | { status: 'invalid_reset' };
+
+/**
+ * Claims a single-use reset link, stores the new password hash and ends every session of that user, in one
+ * transaction. The link is only spent when all of that succeeds.
+ */
+export async function redeemPasswordReset(pool: Pool, token: string, passwordHash: string): Promise<PasswordResetResult> {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [claim] = await conn.query<ResultSetHeader>(
+      'UPDATE password_resets SET used_at = NOW() WHERE token_hash = ? AND used_at IS NULL AND expires_at > NOW()',
+      [hashToken(token)],
+    );
+    if (claim.affectedRows !== 1) {
+      await conn.rollback();
+      return { status: 'invalid_reset' };
+    }
+    const [found] = await conn.query<RowDataPacket[]>(
+      `SELECT u.id, u.username, u.role FROM password_resets r JOIN users u ON u.id = r.user_id WHERE r.token_hash = ? FOR UPDATE`,
+      [hashToken(token)],
+    );
+    const row = found[0];
+    if (!row) {
+      await conn.rollback();
+      return { status: 'invalid_reset' };
+    }
+    const user = toUser(row);
+    await conn.query('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, user.id]);
+    await conn.query('DELETE FROM sessions WHERE user_id = ?', [user.id]);
+    await conn.commit();
+    return { status: 'ok', user };
+  } catch (err) {
+    await conn.rollback().catch(() => undefined);
+    throw err;
+  } finally {
+    conn.release();
+  }
+}

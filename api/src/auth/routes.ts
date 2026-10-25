@@ -4,16 +4,22 @@ import { parseCookies, serializeCookie } from './cookies.js';
 import { getDummyHash, hashPassword, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, verifyPassword } from './password.js';
 import { RateLimiter } from './rateLimit.js';
 import {
+  changePassword,
   countUsers,
   createFirstAdmin,
   createInvite,
+  createPasswordReset,
   createSession,
   deleteExpiredSessions,
   deleteSession,
+  findUserById,
   findUserByUsername,
   getSession,
+  isPasswordResetUsable,
+  listUsers,
   recordLogin,
   redeemInvite,
+  redeemPasswordReset,
   touchSession,
   type AuthUser,
 } from './store.js';
@@ -22,6 +28,7 @@ import { safeEqual } from './tokens.js';
 export const SESSION_COOKIE = 'dominion_session';
 export const SESSION_TTL_DAYS = 30;
 export const INVITE_TTL_HOURS = 72;
+export const PASSWORD_RESET_TTL_HOURS = 24;
 const CSRF_HEADER = 'x-csrf-token';
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const WINDOW_MS = 15 * 60 * 1000;
@@ -64,6 +71,7 @@ export function registerAuth(app: FastifyInstance, options: AuthOptions): { auth
   const { pool } = options;
   const ipLimiter = new RateLimiter(options.limits?.perIp ?? 30, WINDOW_MS);
   const userLimiter = new RateLimiter(options.limits?.perUser ?? 8, WINDOW_MS);
+  const passwordLimiter = new RateLimiter(options.limits?.perUser ?? 8, WINDOW_MS);
 
   app.addHook('onSend', async (request, reply) => {
     if (request.url.startsWith('/auth/')) {
@@ -251,6 +259,111 @@ export function registerAuth(app: FastifyInstance, options: AuthOptions): { auth
       const csrfToken = await startSession(reply, result.user.id);
       request.log.info({ event: 'invite_redeemed', userId: result.user.id }, 'auth');
       return reply.code(201).send({ user: result.user, csrfToken });
+    },
+  );
+
+  app.post(
+    '/auth/password',
+    {
+      onRequest: authenticate,
+      schema: {
+        body: {
+          type: 'object',
+          required: ['currentPassword', 'newPassword'],
+          additionalProperties: false,
+          properties: {
+            currentPassword: { type: 'string', minLength: 1, maxLength: MAX_PASSWORD_LENGTH },
+            newPassword: newAccountProps.password,
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const body = request.body as { currentPassword: string; newPassword: string };
+      const user = request.user;
+      const sessionId = request.sessionId;
+      if (!user || !sessionId) {
+        return reply.code(401).send({ error: 'unauthorized' });
+      }
+      const key = `pw:${user.id}`;
+      const retryAfter = passwordLimiter.retryAfterSeconds(key);
+      if (retryAfter > 0) {
+        return tooMany(reply, retryAfter);
+      }
+      const record = await findUserByUsername(pool, user.username);
+      if (!record || !(await verifyPassword(record.passwordHash, body.currentPassword))) {
+        passwordLimiter.recordFailure(key);
+        request.log.warn({ event: 'password_change_failed', userId: user.id }, 'auth');
+        return reply.code(403).send({ error: 'invalid_current_password' });
+      }
+      if (body.newPassword === body.currentPassword) {
+        return reply.code(422).send({ error: 'password_unchanged' });
+      }
+      await changePassword(pool, user.id, await hashPassword(body.newPassword), sessionId);
+      passwordLimiter.reset(key);
+      request.log.info({ event: 'password_changed', userId: user.id }, 'auth');
+      return reply.code(204).send();
+    },
+  );
+
+  app.get('/auth/users', { onRequest: requireAdmin }, async () => ({ users: await listUsers(pool) }));
+
+  app.post(
+    '/auth/users/:id/password-reset',
+    {
+      onRequest: requireAdmin,
+      schema: { params: { type: 'object', required: ['id'], properties: { id: { type: 'integer', minimum: 1 } } } },
+    },
+    async (request, reply) => {
+      const { id } = request.params as { id: number };
+      const adminId = request.user?.id;
+      if (adminId === undefined) {
+        return reply.code(401).send({ error: 'unauthorized' });
+      }
+      const target = await findUserById(pool, id);
+      if (!target) {
+        return reply.code(404).send({ error: 'not_found' });
+      }
+      const token = await createPasswordReset(pool, target.id, adminId, PASSWORD_RESET_TTL_HOURS);
+      request.log.info({ event: 'password_reset_created', userId: adminId, targetUserId: target.id }, 'auth');
+      return reply.code(201).send({ token, expiresInHours: PASSWORD_RESET_TTL_HOURS, username: target.username });
+    },
+  );
+
+  app.post(
+    '/auth/password-reset/redeem',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['token', 'password'],
+          additionalProperties: false,
+          properties: { token: { type: 'string', minLength: 1, maxLength: 128 }, password: newAccountProps.password },
+        },
+      },
+    },
+    async (request, reply) => {
+      const body = request.body as { token: string; password: string };
+      const key = `reset:${request.ip}`;
+      const retryAfter = ipLimiter.retryAfterSeconds(key);
+      if (retryAfter > 0) {
+        return tooMany(reply, retryAfter);
+      }
+      const invalid = (): FastifyReply => {
+        ipLimiter.recordFailure(key);
+        request.log.warn({ event: 'password_reset_invalid', ip: request.ip }, 'auth');
+        return reply.code(400).send({ error: 'invalid_reset' });
+      };
+      if (!(await isPasswordResetUsable(pool, body.token))) {
+        return invalid();
+      }
+      const result = await redeemPasswordReset(pool, body.token, await hashPassword(body.password));
+      if (result.status === 'invalid_reset') {
+        return invalid();
+      }
+      userLimiter.reset(`user:${result.user.username.toLowerCase()}`);
+      request.log.info({ event: 'password_reset_used', userId: result.user.id }, 'auth');
+      return reply.code(204).send();
     },
   );
 

@@ -107,6 +107,7 @@ describe.skipIf(!dbHost)('card import and API against MySQL', () => {
 
   describe('migration rollback', () => {
     it('drops the card tables with the down migration and restores them on re-apply', async () => {
+      expect(await rollbackLast(pool, path.join(root, 'db/migrations'), silent)).toBe('0006');
       expect(await rollbackLast(pool, path.join(root, 'db/migrations'), silent)).toBe('0004');
       expect(await rollbackLast(pool, path.join(root, 'db/migrations'), silent)).toBe('0003');
       expect(await rollbackLast(pool, path.join(root, 'db/migrations'), silent)).toBe('0002');

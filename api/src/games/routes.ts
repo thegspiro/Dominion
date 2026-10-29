@@ -11,6 +11,8 @@ import {
   type Action,
   type GameState,
   type KingdomCard,
+  type PileState,
+  type PlayerState,
   type Resource,
 } from './engine.js';
 import type { Rules } from './rules.js';
@@ -57,7 +59,7 @@ const actionBody = {
       required: ['type'],
       additionalProperties: false,
       properties: {
-        type: { enum: ['take', 'return', 'set_pile', 'resource', 'vp', 'end_turn', 'finish', 'abandon', 'undo'] },
+        type: { enum: ['take', 'return', 'trash', 'set_pile', 'resource', 'vp', 'end_turn', 'finish', 'abandon', 'undo'] },
         pileKey: { type: 'string', minLength: 1, maxLength: 48 },
         quantity: { type: 'integer', minimum: 1, maximum: 20 },
         count: { type: 'integer', minimum: 0, maximum: 999 },
@@ -84,7 +86,11 @@ function toAction(raw: RawAction): Action | null {
   switch (raw.type) {
     case 'take':
     case 'return':
-      return raw.pileKey === undefined ? null : { type: raw.type, pileKey: raw.pileKey, quantity: raw.quantity ?? 1 };
+      return raw.pileKey === undefined
+        ? null
+        : { type: raw.type, pileKey: raw.pileKey, quantity: raw.quantity ?? 1, ...(raw.seat === undefined ? {} : { seat: raw.seat }) };
+    case 'trash':
+      return raw.pileKey === undefined ? null : { type: 'trash', pileKey: raw.pileKey, ...(raw.seat === undefined ? {} : { seat: raw.seat }) };
     case 'set_pile':
       return raw.pileKey === undefined || raw.count === undefined
         ? null
@@ -106,6 +112,15 @@ function toAction(raw: RawAction): Action | null {
   }
 }
 
+/** A player's taken cards as `{key, label, count}`, in the order the piles are shown. */
+export function deckList(player: PlayerState, piles: PileState[]): { key: string; label: string; count: number }[] {
+  const cards = player.cards ?? {};
+  return piles
+    .filter((pile) => (cards[pile.key] ?? 0) > 0)
+    .sort((a, b) => a.position - b.position)
+    .map((pile) => ({ key: pile.key, label: pile.label, count: cards[pile.key] ?? 0 }));
+}
+
 export function gameView(meta: GameMeta, state: GameState, rules: Rules) {
   const active = state.status === 'active';
   return {
@@ -116,7 +131,14 @@ export function gameView(meta: GameMeta, state: GameState, rules: Rules) {
     turnNumber: state.turnNumber,
     currentSeat: state.currentSeat,
     resources: { actions: state.actions, buys: state.buys, coins: state.coins },
-    players: state.players,
+    players: state.players.map((player) => ({
+      seat: player.seat,
+      name: player.name,
+      vp: player.vp,
+      turnsTaken: player.turnsTaken,
+      cards: deckList(player, state.piles),
+    })),
+    cardsSource: meta.cardsSource,
     piles: state.piles,
     notes: state.notes,
     startedAt: meta.startedAt.toISOString(),

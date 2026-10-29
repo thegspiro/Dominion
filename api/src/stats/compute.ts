@@ -6,6 +6,8 @@ export type Ending = EndReason | 'ended_early';
 export interface FinishedGame {
   id: string;
   endedAtEpoch: number;
+  /** Whether the players' decks were tracked in the tracker, rebuilt from the log afterwards, or are unknown. */
+  cardsSource?: 'tracked' | 'rebuilt' | 'none';
   players: PlayerState[];
   piles: Pick<PileState, 'key' | 'label' | 'kind' | 'cardId' | 'count'>[];
 }
@@ -35,9 +37,17 @@ export interface CardStat {
   winRate: number;
 }
 
+export interface DeckCardStat extends CardStat {
+  averageCopies: number;
+}
+
 export interface PlayerStats {
   name: string;
   record: Tally;
+  /** Games with deck data for this player, and how many of those were rebuilt from the log. */
+  deckGames: number;
+  rebuiltGames: number;
+  deckCards: DeckCardStat[];
   ambiguousGames: number;
   averages: { score: number | null; opponentScore: number | null; turns: number | null };
   headToHead: (Tally & { opponent: string })[];
@@ -110,6 +120,9 @@ export function computeStats(games: FinishedGame[], player: string, rules: Rules
   const turns: number[] = [];
   const opponents = new Map<string, Tally & { opponent: string }>();
   const cards = new Map<string, CardStat>();
+  const deckCards = new Map<string, { stat: CardStat; copies: number }>();
+  let deckGames = 0;
+  let rebuiltGames = 0;
   let ambiguousGames = 0;
   let display = player.trim();
   let displayed = false;
@@ -151,6 +164,29 @@ export function computeStats(games: FinishedGame[], player: string, rules: Rules
       opponents.set(key, row);
     }
 
+    if (game.cardsSource === 'tracked' || game.cardsSource === 'rebuilt') {
+      deckGames += 1;
+      rebuiltGames += game.cardsSource === 'rebuilt' ? 1 : 0;
+      for (const pile of game.piles) {
+        const copies = me.cards?.[pile.key] ?? 0;
+        if (pile.kind !== 'kingdom' || pile.cardId === null || copies < 1) {
+          continue;
+        }
+        const entry = deckCards.get(pile.cardId) ?? {
+          stat: { cardId: pile.cardId, name: pile.label, games: 0, wins: 0, ties: 0, winRate: 0 },
+          copies: 0,
+        };
+        entry.stat.games += 1;
+        entry.copies += copies;
+        if (outcome === 'win') {
+          entry.stat.wins += 1;
+        } else if (outcome === 'tie') {
+          entry.stat.ties += 1;
+        }
+        deckCards.set(pile.cardId, entry);
+      }
+    }
+
     for (const pile of game.piles) {
       if (pile.kind !== 'kingdom' || pile.cardId === null) {
         continue;
@@ -170,6 +206,13 @@ export function computeStats(games: FinishedGame[], player: string, rules: Rules
     name: display,
     record,
     ambiguousGames,
+    deckGames,
+    rebuiltGames,
+    deckCards: [...deckCards.values()]
+      .filter((c) => c.stat.games >= MIN_CARD_GAMES)
+      .map((c) => ({ ...c.stat, winRate: c.stat.wins / c.stat.games, averageCopies: c.copies / c.stat.games }))
+      .sort((a, b) => b.winRate - a.winRate || b.games - a.games || a.name.localeCompare(b.name))
+      .slice(0, MAX_CARDS),
     averages: { score: mean(scores), opponentScore: mean(opponentScores), turns: mean(turns) },
     headToHead: [...opponents.values()].sort((a, b) => b.games - a.games || a.opponent.localeCompare(b.opponent)),
     endings,

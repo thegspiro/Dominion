@@ -2,7 +2,9 @@ import type { FastifyInstance } from 'fastify';
 import type { Pool, RowDataPacket } from 'mysql2/promise';
 import type { Authenticate } from '../auth/routes.js';
 import type { PileKind, PileState, PlayerState } from '../games/engine.js';
+import { deckList } from '../games/routes.js';
 import type { Rules } from '../games/rules.js';
+import { loadGame } from '../games/store.js';
 import { computeStats, historyItem, MIN_CARD_GAMES, playerNames, type FinishedGame } from './compute.js';
 import { logItem, type LogItem } from './log.js';
 
@@ -45,7 +47,7 @@ async function loadFinished(
   }
   params.push(limit);
   const [games] = await pool.query<RowDataPacket[]>(
-    `SELECT id, UNIX_TIMESTAMP(ended_at) AS ended_epoch FROM games
+    `SELECT id, cards_source, UNIX_TIMESTAMP(ended_at) AS ended_epoch FROM games
       WHERE owner_user_id = ? AND status = 'finished' AND ended_at IS NOT NULL ${cursor}
       ORDER BY ended_at DESC, id DESC LIMIT ?`,
     params,
@@ -62,10 +64,27 @@ async function loadFinished(
     'SELECT game_id, pile_key, label, kind, card_id, count FROM game_piles WHERE game_id IN (?) ORDER BY game_id, position',
     [ids],
   );
+  const [held] = await pool.query<RowDataPacket[]>(
+    'SELECT game_id, seat, pile_key, count FROM game_player_cards WHERE game_id IN (?)',
+    [ids],
+  );
+  const cardsBy = new Map<string, Record<string, number>>();
+  for (const row of held) {
+    const key = `${String(row['game_id'])}:${Number(row['seat'])}`;
+    const cards = cardsBy.get(key) ?? {};
+    cards[String(row['pile_key'])] = Number(row['count']);
+    cardsBy.set(key, cards);
+  }
   const playersBy = new Map<string, PlayerState[]>();
   for (const row of players) {
     const list = playersBy.get(String(row['game_id'])) ?? [];
-    list.push({ seat: Number(row['seat']), name: String(row['name']), vp: Number(row['vp']), turnsTaken: Number(row['turns_taken']) });
+    list.push({
+      seat: Number(row['seat']),
+      name: String(row['name']),
+      vp: Number(row['vp']),
+      turnsTaken: Number(row['turns_taken']),
+      cards: cardsBy.get(`${String(row['game_id'])}:${Number(row['seat'])}`) ?? {},
+    });
     playersBy.set(String(row['game_id']), list);
   }
   const pilesBy = new Map<string, FinishedGame['piles']>();
@@ -83,6 +102,7 @@ async function loadFinished(
   return games.map((g) => ({
     id: String(g['id']),
     endedAtEpoch: Number(g['ended_epoch']),
+    cardsSource: g['cards_source'] as FinishedGame['cardsSource'],
     players: playersBy.get(String(g['id'])) ?? [],
     piles: pilesBy.get(String(g['id'])) ?? [],
   }));
@@ -134,8 +154,8 @@ export function registerStats(app: FastifyInstance, options: { pool: Pool; authe
 
   app.get('/games/:id/log', { onRequest: authenticate, schema: { params: idParams } }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const [owned] = await pool.query<RowDataPacket[]>('SELECT id FROM games WHERE id = ? AND owner_user_id = ?', [id, userId(request)]);
-    if (owned.length === 0) {
+    const loaded = await loadGame(pool, id, userId(request), false);
+    if (!loaded) {
       return reply.code(404).send({ error: 'not_found' });
     }
     const [events] = await pool.query<RowDataPacket[]>(
@@ -158,6 +178,14 @@ export function registerStats(app: FastifyInstance, options: { pool: Pool; authe
       }
     }
     reply.header('Cache-Control', 'no-store');
-    return { items };
+    return {
+      items,
+      cardsSource: loaded.meta.cardsSource,
+      decks: loaded.state.players.map((player) => ({
+        seat: player.seat,
+        name: player.name,
+        cards: deckList(player, loaded.state.piles),
+      })),
+    };
   });
 }

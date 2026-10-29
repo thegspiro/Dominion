@@ -10,11 +10,18 @@ interface Pile {
   enforced: boolean;
 }
 
+interface DeckEntry {
+  key: string;
+  label: string;
+  count: number;
+}
+
 interface Player {
   seat: number;
   name: string;
   vp: number;
   turnsTaken: number;
+  cards: DeckEntry[];
 }
 
 interface Game {
@@ -28,6 +35,7 @@ interface Game {
   piles: Pile[];
   notes: string[];
   canUndo: boolean;
+  cardsSource: 'tracked' | 'rebuilt' | 'none';
   endReasons: string[];
   result: { winners: number[]; tiedOnPoints: boolean } | null;
 }
@@ -44,6 +52,8 @@ const bar = byId<HTMLElement>('bar');
 let game: Game | null = null;
 let busy = false;
 let note = '';
+/** The seat that receives the next card taken, or null for whoever's turn it is. Reset after one card and when the turn ends. */
+let giveSeat: number | null = null;
 const openSections = new Set<string>();
 
 const END_TEXT: Record<string, string> = {
@@ -71,11 +81,15 @@ function buysLeft(g: Game): string {
 function describeChange(action: ActionBody, before: Game, after: Game): string {
   const actor = before.players.find((p) => p.seat === before.currentSeat)?.name ?? 'Player';
   const label = before.piles.find((p) => p.key === action['pileKey'])?.label ?? 'a card';
+  const recipient = typeof action['seat'] === 'number' ? before.players.find((p) => p.seat === action['seat']) : undefined;
+  const forOther = recipient !== undefined && recipient.seat !== before.currentSeat;
   switch (action['type']) {
     case 'take':
-      return `${actor} took ${label}. ${buysLeft(after)}`;
+      return forOther ? `${recipient.name} gained ${label}.` : `${actor} took ${label}. ${buysLeft(after)}`;
     case 'return':
-      return `${actor} put back ${label}.`;
+      return forOther ? `${label} was taken back from ${recipient.name}.` : `${actor} put back ${label}.`;
+    case 'trash':
+      return `${(recipient ?? before.players.find((p) => p.seat === before.currentSeat))?.name ?? actor} trashed ${label}.`;
     case 'set_pile':
       return `${label} was set to ${action['count']}.`;
     case 'vp': {
@@ -89,6 +103,11 @@ function describeChange(action: ActionBody, before: Game, after: Game): string {
     default:
       return '';
   }
+}
+
+/** The extra `seat` field for a take or return: only when the chip points at someone other than the current player. */
+function recipientField(g: Game): { seat?: number } {
+  return giveSeat !== null && giveSeat !== g.currentSeat ? { seat: giveSeat } : {};
 }
 
 async function send(action: ActionBody): Promise<void> {
@@ -109,6 +128,9 @@ async function send(action: ActionBody): Promise<void> {
   if (res.ok && res.body) {
     game = res.body;
     note = describeChange(action, before, game);
+    if (action['type'] === 'take' || action['type'] === 'return' || action['type'] === 'end_turn' || action['type'] === 'undo') {
+      giveSeat = null;
+    }
   } else if (res.status === 409 && res.body?.game) {
     game = res.body.game;
     note = '';
@@ -155,7 +177,7 @@ function supplyTile(pile: Pile): HTMLElement {
     attrs: { type: 'button', 'aria-label': pile.count === 0 ? `${pile.label}, empty` : `Take one ${pile.label}, ${pile.count} left` },
   }, [el('span', { className: 'name', text: pile.label.replace(/\//g, '/\u200b') }), el('span', { className: 'left', text: left })]);
   take.disabled = pile.count === 0;
-  take.addEventListener('click', () => void send({ type: 'take', pileKey: pile.key }));
+  take.addEventListener('click', () => void send({ type: 'take', pileKey: pile.key, ...recipientField(game as Game) }));
   const back = button('−', () => void send({ type: 'return', pileKey: pile.key }), {
     aria: `Return one ${pile.label}`,
     className: 'supply-return',
@@ -202,6 +224,45 @@ function scoreControls(player: Player): HTMLElement {
     }),
   );
   return el('div', { className: 'player' }, [el('strong', { text: player.name }), el('div', { className: 'controls' }, buttons)]);
+}
+
+function givingChip(g: Game): HTMLElement {
+  const target = giveSeat === null ? g.currentSeat : giveSeat;
+  const who = g.players.find((p) => p.seat === target)?.name ?? 'Player';
+  const other = target !== g.currentSeat;
+  const chip = button(`Gaining for: ${who}${other ? ' (not the current player)' : ''}`, () => {
+    const seats = g.players.map((p) => p.seat);
+    const next = seats[(seats.indexOf(target) + 1) % seats.length] ?? g.currentSeat;
+    giveSeat = next === g.currentSeat ? null : next;
+    render();
+  }, { className: other ? 'give-chip other' : 'give-chip', aria: `Cards go to ${who}. Tap to choose another player.` });
+  return el('p', {}, [chip]);
+}
+
+function deckBlock(player: Player, active: boolean): HTMLElement {
+  const rows =
+    player.cards.length === 0
+      ? [el('p', { className: 'detail', text: 'Nothing taken yet.' })]
+      : player.cards.map((card) =>
+          el('div', { className: 'deck-row' }, [
+            el('span', { text: `${card.label} \u00d7 ${card.count}` }),
+            ...(active
+              ? [button('Trash', () => void send({ type: 'trash', pileKey: card.key, seat: player.seat }), { aria: `Trash one ${card.label} from ${player.name}'s deck` })]
+              : []),
+          ]),
+        );
+  return el('div', { className: 'player' }, [el('strong', { text: player.name }), ...rows]);
+}
+
+function decksSection(g: Game, active: boolean): HTMLElement {
+  const notes: Node[] = [];
+  if (g.cardsSource === 'none') {
+    notes.push(el('p', { className: 'detail', text: 'Cards taken before decks were tracked are not listed for this game.' }));
+  } else if (g.cardsSource === 'rebuilt') {
+    notes.push(el('p', { className: 'detail', text: 'Rebuilt from the game log: cards given to an opponent before decks were tracked are listed under the player whose turn it was.' }));
+  }
+  notes.push(el('p', { className: 'detail', text: 'Cards taken from the supply only. Starting cards are not counted.' }));
+  return section('decks', 'Decks', [...notes, ...g.players.map((p) => deckBlock(p, active))]);
 }
 
 function setStatus(g: Game): void {
@@ -277,6 +338,7 @@ function render(): void {
     const kingdom = g.piles.filter((p) => p.kind === 'kingdom');
     const basic = g.piles.filter((p) => p.kind !== 'kingdom');
     const empty = g.piles.filter((p) => p.count === 0).length;
+    children.push(givingChip(g));
     if (kingdom.length > 0) {
       children.push(el('h2', { className: 'section-title', text: 'Kingdom' }), supplyGrid(kingdom));
     }
@@ -287,6 +349,8 @@ function render(): void {
   }
 
   children.push(el('h2', { className: 'section-title', text: 'Scores' }), el('div', { className: 'score-row' }, g.players.map((p) => scoreCard(p, active && p.seat === g.currentSeat))));
+
+  children.push(decksSection(g, active));
 
   if (active) {
     children.push(section('scores', 'Change scores', g.players.map(scoreControls)));
